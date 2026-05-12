@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { loadCurrentMonth, saveCurrentMonth, nextMonthKey, todayMonthKey, calcEMI, getOrCreateGroup, loadMembersFromDB, saveMemberToDB, deleteMemberFromDB, loadMonthsFromDB, createMonthInDB, markEntryPaid, undoEntryPaid, updateMemberBalance } from "./store.js";
+import { supabase } from "./supabase.js";
+import { loadCurrentMonth, saveCurrentMonth, nextMonthKey, todayMonthKey, calcEMI, getOrCreateGroup, loadMembersFromDB, saveMemberToDB, deleteMemberFromDB, loadMonthsFromDB, createMonthInDB, markEntryPaid, undoEntryPaid, updateMemberBalance, monthKey } from "./store.js";
 import Header from "./components/Header.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import MonthlyView from "./components/MonthlyView.jsx";
 import Members from "./components/Members.jsx";
 import Reports from "./components/Reports.jsx";
-import { ToastContainer } from "./components/Toast.jsx";
 import Footer from "./components/Footer.jsx";
+import { ToastContainer, toast } from "./components/Toast.jsx";
+
 function PinScreen({ onSuccess }) {
   const [mode, setMode] = useState("check");
   const [pin, setPin] = useState("");
@@ -38,6 +40,7 @@ function PinScreen({ onSuccess }) {
             </div>
             {error && <div className="marathi text-center" style={{ color:"var(--red)", fontSize:13, marginBottom:12 }}>{error}</div>}
             <button className="btn btn-saffron btn-full" onClick={handleLogin} disabled={pin.length!==4} style={{ opacity:pin.length===4?1:0.5 }}><span className="marathi">प्रवेश करा</span></button>
+            <div className="marathi" style={{ textAlign:"center", marginTop:20, color:"var(--text3)", fontSize:11, fontFamily:"serif" }}>निर्मिती: पवन भिमेवार अँड असोसिएट्स, नांदेड</div>
           </>
         ) : (
           <>
@@ -54,74 +57,114 @@ function PinScreen({ onSuccess }) {
     </div>
   );
 }
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [members, setMembers] = useState([]);
   const [months, setMonths] = useState({});
   const [currentMonth, setCurrentMonthState] = useState(todayMonthKey());
+  const [groupId, setGroupId] = useState(null);
+
   useEffect(() => {
     if (!unlocked) return;
-    const m = loadMembers();
-    const mo = loadMonths();
-    const cm = loadCurrentMonth();
-    setMembers(m); setCurrentMonthState(cm);
-    let updatedMo = { ...mo };
-    if (!updatedMo[cm]) { updatedMo[cm] = createMonthRecord(m, cm); saveMonths(updatedMo); }
-    setMonths(updatedMo);
+    async function init() {
+      setLoading(true);
+      try {
+        const group = await getOrCreateGroup("श्री स्वामी समर्थ बचत गट", "बारड, तालुका मुदखेड, जि. नांदेड");
+        setGroupId(group.id);
+        let dbMembers = await loadMembersFromDB(group.id);
+        if (dbMembers.length === 0) {
+          const DEFAULT_NAMES = ["रवी कराळे","सुनील घंटेवार","शिवराज कस्तुरे","पवन भिमेवार","शेख शब्बीर मामा","माधव सूर्यवंशी","नागोराव मामा कल्याणकर","दिगंबर येलमगुंडे","संदीप मामा बट्टेवार","पिराजीराव केदारे","प्रदीप हुके","परमेश्वर धर्मे","सुदाम मुपडे","अमोल पंचभाई","गिरीष घंटेवार","शुभम चिवटेवार","पदमेश दुर्गे","संदीप पानबुडे","साहेब सोनटके","शंकर शिंदे"];
+          for (const name of DEFAULT_NAMES) {
+            const { data } = await supabase.from('members').insert({ group_id: group.id, name, phone: "", loan_amount: 0, balance: 0 }).select().single();
+            if (data) dbMembers.push(data);
+          }
+        }
+        const mappedMembers = dbMembers.map(m => ({ id: m.id, db_id: m.id, name: m.name, phone: m.phone||"", loanAmount: m.loan_amount||0, balance: m.balance||0, createdAt: m.created_at }));
+        setMembers(mappedMembers);
+        const cm = loadCurrentMonth();
+        setCurrentMonthState(cm);
+        let dbMonths = await loadMonthsFromDB(group.id);
+        if (!dbMonths[cm]) {
+          const newMonth = await createMonthInDB(mappedMembers, cm, group.id);
+          if (newMonth) dbMonths[cm] = newMonth;
+        }
+        setMonths(dbMonths);
+      } catch(e) { console.error(e); }
+      setLoading(false);
+    }
+    init();
   }, [unlocked]);
+
   function setCurrentMonth(key) { setCurrentMonthState(key); saveCurrentMonth(key); }
-  const handleMarkPaid = useCallback((monthKey, memberId) => {
-    setMonths(prev => {
-      const monthRecord = prev[monthKey]; if (!monthRecord) return prev;
-      const entry = monthRecord.entries[memberId]; if (!entry || entry.paid) return prev;
-      const updatedEntry = { ...entry, paid:true, paidAt:Date.now() };
-      const updatedMonths = { ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]:updatedEntry } } };
-      saveMonths(updatedMonths);
-      setMembers(prevMembers => { const updatedMembers = prevMembers.map(m => { if (m.id!==memberId) return m; const newBalance = m.balance>0?Math.max(0,m.balance-calcEMI(m.loanAmount)):0; return {...m,balance:newBalance}; }); saveMembers(updatedMembers); return updatedMembers; });
-      return updatedMonths;
-    });
-  }, []);
-  const handleUndoPaid = useCallback((monthKey, memberId) => {
-    setMonths(prev => {
-      const monthRecord = prev[monthKey]; if (!monthRecord) return prev;
-      const entry = monthRecord.entries[memberId]; if (!entry || !entry.paid) return prev;
-      const updatedEntry = { ...entry, paid:false, paidAt:null };
-      const updatedMonths = { ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]:updatedEntry } } };
-      saveMonths(updatedMonths);
-      setMembers(prevMembers => { const updatedMembers = prevMembers.map(m => { if (m.id!==memberId) return m; const restoredBalance = entry.balanceBefore!==undefined?entry.balanceBefore:m.balance+calcEMI(m.loanAmount); return {...m,balance:restoredBalance}; }); saveMembers(updatedMembers); return updatedMembers; });
-      return updatedMonths;
-    });
-  }, []);
-  const handleCreateNextMonth = useCallback((forMonthKey) => {
+
+  const handleMarkPaid = useCallback(async (monthKey, memberId) => {
+    const monthRecord = months[monthKey];
+    if (!monthRecord) return;
+    const entry = monthRecord.entries[memberId];
+    if (!entry || entry.paid) return;
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    const principal = calcEMI(member.loanAmount);
+    const newBalance = member.balance > 0 ? Math.max(0, member.balance - principal) : 0;
+    await markEntryPaid(entry.db_id, newBalance, 0);
+    await updateMemberBalance(member.db_id, newBalance);
+    setMembers(prev => prev.map(m => m.id === memberId ? {...m, balance: newBalance} : m));
+    setMonths(prev => ({ ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]: { ...entry, paid: true, paidAt: new Date().toISOString(), balanceAfter: newBalance } } } }));
+    toast("रक्कम यशस्वीरित्या नोंद झाली ✓", "success");
+  }, [months, members]);
+
+  const handleUndoPaid = useCallback(async (monthKey, memberId) => {
+    const monthRecord = months[monthKey];
+    if (!monthRecord) return;
+    const entry = monthRecord.entries[memberId];
+    if (!entry || !entry.paid) return;
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    const restoredBalance = entry.balanceBefore !== undefined ? entry.balanceBefore : member.balance + calcEMI(member.loanAmount);
+    await undoEntryPaid(entry.db_id);
+    await updateMemberBalance(member.db_id, restoredBalance);
+    setMembers(prev => prev.map(m => m.id === memberId ? {...m, balance: restoredBalance} : m));
+    setMonths(prev => ({ ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]: { ...entry, paid: false, paidAt: null } } } }));
+    toast("रक्कम रद्द केली", "info");
+  }, [months, members]);
+
+  const handleCreateNextMonth = useCallback(async (forMonthKey) => {
     const targetKey = forMonthKey ? forMonthKey : nextMonthKey(currentMonth);
-    setMembers(currentMembers => { setMonths(prev => { if (prev[targetKey]) { setCurrentMonth(targetKey); return prev; } const newRecord = createMonthRecord(currentMembers, targetKey); const updated = { ...prev, [targetKey]:newRecord }; saveMonths(updated); setCurrentMonth(targetKey); return updated; }); return currentMembers; });
-  }, [currentMonth]);
-  const handleSaveMember = useCallback((member) => {
-    setMembers(prev => {
-      const exists = prev.find(m=>m.id===member.id);
-      const updated = exists ? prev.map(m=>m.id===member.id?member:m) : [...prev,member];
-      saveMembers(updated);
-      setMonths(prevMonths => {
-        const updatedMonths = { ...prevMonths };
-        Object.keys(updatedMonths).forEach(mk => {
-          const mr = updatedMonths[mk];
-          const principal = calcEMI(member.loanAmount);
-          const interest = Math.round(member.balance*0.015);
-          const SAVING = 1000;
-          if (mr.entries[member.id]) { const entry=mr.entries[member.id]; if(!entry.paid){updatedMonths[mk]={...mr,entries:{...mr.entries,[member.id]:{...entry,principal,interest,totalDue:SAVING+principal+interest,balanceBefore:member.balance,balanceAfter:member.balance>0?Math.max(0,member.balance-principal):0}}};} }
-          else if (!exists) { updatedMonths[mk]={...mr,entries:{...mr.entries,[member.id]:{memberId:member.id,saving:SAVING,principal,interest,totalDue:SAVING+principal+interest,paid:false,paidAt:null,balanceBefore:member.balance,balanceAfter:member.balance>0?Math.max(0,member.balance-principal):0}}}; }
-        });
-        saveMonths(updatedMonths); return updatedMonths;
-      });
-      return updated;
-    });
+    if (months[targetKey]) { setCurrentMonth(targetKey); return; }
+    const newMonth = await createMonthInDB(members, targetKey, groupId);
+    if (newMonth) {
+      setMonths(prev => ({ ...prev, [targetKey]: newMonth }));
+      setCurrentMonth(targetKey);
+      toast(`${targetKey} महिना तयार झाला`, "success");
+    }
+  }, [currentMonth, months, members, groupId]);
+
+  const handleSaveMember = useCallback(async (member) => {
+    const saved = await saveMemberToDB(member, groupId);
+    if (!saved) return;
+    const mappedMember = { ...member, id: saved.id, db_id: saved.id, loanAmount: saved.loan_amount||0, balance: saved.balance||0 };
+    setMembers(prev => { const exists = prev.find(m => m.id === member.id); return exists ? prev.map(m => m.id === member.id ? mappedMember : m) : [...prev, mappedMember]; });
+    toast("माहिती जतन झाली ✓", "success");
+  }, [groupId]);
+
+  const handleDeleteMember = useCallback(async (memberId) => {
+    await deleteMemberFromDB(memberId);
+    setMembers(prev => prev.filter(m => m.id !== memberId));
+    toast("सदस्य काढला", "info");
   }, []);
-  const handleDeleteMember = useCallback((memberId) => {
-    setMembers(prev => { const updated=prev.filter(m=>m.id!==memberId); saveMembers(updated); return updated; });
-    setMonths(prev => { const updated={}; Object.entries(prev).forEach(([k,mr])=>{const entries={...mr.entries};delete entries[memberId];updated[k]={...mr,entries};}); saveMonths(updated); return updated; });
-  }, []);
+
   if (!unlocked) return <PinScreen onSuccess={() => setUnlocked(true)} />;
+
+  if (loading) return (
+    <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
+      <div style={{ fontSize:50, marginBottom:16 }}>🪔</div>
+      <div className="marathi" style={{ fontSize:16, color:"var(--text2)" }}>डेटा लोड होत आहे...</div>
+    </div>
+  );
+
   return (
     <div style={{ maxWidth:600, margin:"0 auto", minHeight:"100vh", background:"var(--bg)", position:"relative" }}>
       <ToastContainer />
