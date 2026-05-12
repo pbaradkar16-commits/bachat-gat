@@ -20,7 +20,7 @@ function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 export function loadMembers() {
   const saved = load(KEYS.members);
   if (saved && saved.length > 0) return saved;
-  const members = DEFAULT_MEMBERS.map((name,i) => ({ id: genId()+i, name, phone:"", loanAmount:0, balance:0, createdAt:Date.now() }));
+  const members = DEFAULT_MEMBERS.map((name,i) => ({ id: "member_"+i, name, phone:"", loanAmount:0, balance:0, createdAt:Date.now() }));
   save(KEYS.members, members); return members;
 }
 export function saveMembers(members) { save(KEYS.members, members); }
