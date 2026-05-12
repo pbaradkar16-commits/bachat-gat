@@ -72,7 +72,7 @@ export default function App() {
     async function init() {
       setLoading(true);
       try {
-        const group = await getOrCreateGroup("श्री स्वामी समर्थ बचत गट", "बारड, तालुका मुदखेड, जि. नांदेड");
+        const group = { id: "a1e0e13a-595b-4a1b-99b6-a820cac734eb" };
         setGroupId(group.id);
         let dbMembers = await loadMembersFromDB(group.id);
         if (dbMembers.length === 0) {
