@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { loadMembers, saveMembers, loadMonths, saveMonths, loadCurrentMonth, saveCurrentMonth, createMonthRecord, nextMonthKey, todayMonthKey, calcEMI } from "./store.js";
+import { loadCurrentMonth, saveCurrentMonth, nextMonthKey, todayMonthKey, calcEMI, getOrCreateGroup, loadMembersFromDB, saveMemberToDB, deleteMemberFromDB, loadMonthsFromDB, createMonthInDB, markEntryPaid, undoEntryPaid, updateMemberBalance } from "./store.js";
 import Header from "./components/Header.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import MonthlyView from "./components/MonthlyView.jsx";
 import Members from "./components/Members.jsx";
 import Reports from "./components/Reports.jsx";
 import { ToastContainer } from "./components/Toast.jsx";
+import Footer from "./components/Footer.jsx";
 function PinScreen({ onSuccess }) {
   const [mode, setMode] = useState("check");
   const [pin, setPin] = useState("");
@@ -131,6 +132,7 @@ export default function App() {
         {activeTab==="members" && <Members members={members} months={months} onSave={handleSaveMember} onDelete={handleDeleteMember}/>}
         {activeTab==="reports" && <Reports members={members} months={months} currentMonth={currentMonth} onUpdateMembers={setMembers} onUpdateMonths={setMonths}/>}
       </main>
+      <Footer />
     </div>
   );
 }

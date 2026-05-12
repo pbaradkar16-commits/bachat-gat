@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { monthLabel, formatRs, getMonthStats, getGroupBalanceSheet, loadBankBalances, saveBankBalances, calcEMI, saveMembers, saveMonths, createMonthRecord } from "../store.js";
+import { monthLabel, formatRs, getMonthStats, getGroupBalanceSheet, loadBankBalances, saveBankBalances, calcEMI, saveMemberToDB, createMonthInDB } from "../store.js";
 export default function Reports({ members, months, currentMonth, onUpdateMembers, onUpdateMonths }) {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [view, setView] = useState("monthly");
