@@ -175,7 +175,7 @@ export default function App() {
     });
   }, []);
 
-  if (!unlocked) return <PinScreen onSuccess={() => setUnlocked(true)} />;
+  if (!unlocked) return <PinScreen onSuccess={() => { setUnlocked(true); sessionStorage.setItem("sssb_unlocked","true"); }} />;
 
   return (
     <div style={{ maxWidth:600, margin:"0 auto", minHeight:"100vh", background:"var(--bg)", position:"relative" }}>
