@@ -23,8 +23,8 @@ function PinScreen({ onSuccess }) {
   return (
     <div style={{ minHeight:"100vh", background:"linear-gradient(135deg, #E8650A, #A03A06)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20 }}>
       <div style={{ fontSize:60, marginBottom:16 }}>🪔</div>
-      <div className="marathi" style={{ color:"#fff", fontSize:20, fontWeight:700, marginBottom:4, textAlign:"center" }}>श्री स्वामी समर्थ बचत गट</div>
-      <div className="marathi" style={{ color:"rgba(255,255,255,0.8)", fontSize:13, marginBottom:32, textAlign:"center" }}>बारड · तालुका मुदखेड · जि. नांदेड</div>
+      <div className="marathi" style={{ color:"#fff", fontSize:20, fontWeight:700, marginBottom:4, textAlign:"center" }}>श्री शीतला देवी पुरुष बचत गट बारड</div>
+      <div className="marathi" style={{ color:"rgba(255,255,255,0.8)", fontSize:13, marginBottom:32, textAlign:"center" }}>तालुका मुदखेड · जि. नांदेड</div>
       <div style={{ background:"#fff", borderRadius:20, padding:28, width:"100%", maxWidth:340, boxShadow:"0 8px 32px rgba(0,0,0,0.2)" }}>
         {mode === "check" ? (
           <>
@@ -90,7 +90,9 @@ export default function App() {
       setMembers(prevMembers => {
         const updatedMembers = prevMembers.map(m => {
           if (m.id !== memberId) return m;
-          const newBalance = m.balance > 0 ? Math.max(0, m.balance - calcEMI(m.loanAmount)) : 0;
+          const extraPayment = customAmount ? customAmount - (entry.totalDue || 0) : 0;
+          const principalPaid = calcEMI(m.loanAmount) + (extraPayment > 0 ? extraPayment : 0);
+          const newBalance = isForeclosure ? 0 : (m.balance > 0 ? Math.max(0, m.balance - principalPaid) : 0);
           return { ...m, balance: newBalance };
         });
         saveMembers(updatedMembers);

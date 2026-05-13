@@ -7,8 +7,8 @@ export default function Header({ activeTab, setActiveTab, onLock }) {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, border: "2px solid rgba(255,255,255,0.4)" }}>🪔</div>
             <div style={{ flex: 1 }}>
-              <div className="marathi" style={{ color: "#fff", fontSize: 15, fontWeight: 700, lineHeight: 1.4 }}>श्री स्वामी समर्थ बचत गट</div>
-              <div className="marathi" style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>बारड · तालुका मुदखेड · जि. नांदेड</div>
+              <div className="marathi" style={{ color: "#fff", fontSize: 15, fontWeight: 700, lineHeight: 1.4 }}>श्री शीतला देवी पुरुष बचत गट बारड</div>
+              <div className="marathi" style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>तालुका मुदखेड · जि. नांदेड</div>
             </div>
             <button onClick={onLock} style={{ background: "rgba(255,255,255,0.2)", border: "1.5px solid rgba(255,255,255,0.4)", borderRadius: 10, padding: "6px 10px", color: "#fff", fontSize: 18, cursor: "pointer" }} title="Lock">🔒</button>
           </div>

@@ -5,14 +5,27 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
   const [confirmId, setConfirmId] = useState(null);
   const [undoId, setUndoId] = useState(null);
   const [filterPaid, setFilterPaid] = useState("all");
+  const [customAmounts, setCustomAmounts] = useState({});
+  const [foreclosureId, setForeclosureId] = useState(null);
   const monthRecord = months[currentMonth];
   const stats = getMonthStats(monthRecord, members);
   const prevKey = prevMonthKey(currentMonth);
   const nextKey = nextMonthKey(currentMonth);
   const hasPrev = !!months[prevKey];
   const hasNext = !!months[nextKey];
-  function handleMarkPaid(memberId) { onMarkPaid(currentMonth, memberId); setConfirmId(null); toast("रक्कम यशस्वीरित्या नोंद झाली ✓", "success"); }
-  function handleUndo(memberId) { onUndoPaid(currentMonth, memberId); setUndoId(null); toast("रक्कम रद्द केली ✓", "info"); }
+  function handleMarkPaid(memberId) {
+    const customAmt = customAmounts[memberId];
+    onMarkPaid(currentMonth, memberId, customAmt);
+    setConfirmId(null);
+    setCustomAmounts(prev => { const n = {...prev}; delete n[memberId]; return n; });
+    toast("रक्कम यशस्वीरित्या नोंद झाली ✓", "success");
+  }
+  function handleForeclosure(memberId) {
+    onMarkPaid(currentMonth, memberId, null, true);
+    setForeclosureId(null);
+    toast("Foreclosure यशस्वी! कर्ज बंद झाले ✓", "success");
+  }
+  function handleUndo(memberId) { onUndoPaid(currentMonth, memberId); setUndoId(null); toast("रक्कम रद्द केली", "info"); }
   function handleCreateNext() { onCreateNextMonth(); toast(`${monthLabel(nextKey)} महिना तयार झाला`, "success"); }
   if (!monthRecord) {
     return (
@@ -55,6 +68,9 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
           const entry = monthRecord.entries[member.id];
           if (!entry) return null;
           const isPaid = entry.paid;
+          const emi = calcEMI(member.loanAmount);
+          const minAmount = entry.totalDue;
+          const customAmt = customAmounts[member.id];
           return (
             <div key={member.id} className="card fade-in" style={{ animationDelay: `${idx * 0.03}s`, borderLeft: `4px solid ${isPaid ? "var(--green)" : "var(--border)"}` }}>
               <div className="card-body" style={{ padding: "14px 14px" }}>
@@ -65,30 +81,63 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
                   </div>
                   <span className={"badge " + (isPaid ? "badge-green" : "badge-red")}><span className="marathi">{isPaid ? "✓ भरले" : "बाकी"}</span></span>
                 </div>
-                <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 12px", marginBottom: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+                <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "10px 12px", marginBottom: 10, display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
                   <div style={{ textAlign: "center" }}><div style={{ fontSize: 13, fontWeight: 700, color: "var(--saffron)" }}>{formatRs(entry.saving)}</div><div className="marathi text-xs text-muted">बचत</div></div>
-                  <div style={{ textAlign: "center", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}><div style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)" }}>{formatRs(entry.principal)}</div><div className="marathi text-xs text-muted">मूळ हप्ता</div></div>
+                  <div style={{ textAlign: "center", borderLeft: "1px solid var(--border)", borderRight: "1px solid var(--border)" }}><div style={{ fontSize: 13, fontWeight: 700, color: "var(--blue)" }}>{formatRs(entry.principal)}</div><div className="marathi text-xs text-muted">हप्ता</div></div>
                   <div style={{ textAlign: "center" }}><div style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>{formatRs(entry.interest)}</div><div className="marathi text-xs text-muted">व्याज</div></div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                  <div><div className="marathi text-xs text-muted">एकूण देणे</div><div style={{ fontSize: 17, fontWeight: 700 }}>{formatRs(entry.totalDue)}</div></div>
+                  <div><div className="marathi text-xs text-muted">किमान देणे</div><div style={{ fontSize: 17, fontWeight: 700 }}>{formatRs(entry.totalDue)}</div></div>
                   {member.balance > 0 && <div style={{ textAlign: "right" }}><div className="marathi text-xs text-muted">उर्वरित कर्ज</div><div style={{ fontSize: 13, fontWeight: 600, color: "var(--red)" }}>{formatRs(isPaid ? entry.balanceAfter : entry.balanceBefore)}</div></div>}
                 </div>
+                {!isPaid && member.balance > 0 && (
+                  <div style={{ marginBottom: 10 }}>
+                    <label className="marathi" style={{ fontSize: 12 }}>जास्त रक्कम भरायची असेल तर (optional):</label>
+                    <input
+                      className="input"
+                      type="number"
+                      placeholder={`किमान ${formatRs(minAmount)}`}
+                      value={customAmt || ""}
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        if (val >= minAmount || e.target.value === "") {
+                          setCustomAmounts(prev => ({ ...prev, [member.id]: val || null }));
+                        }
+                      }}
+                      style={{ fontSize: 14, padding: "8px 12px" }}
+                    />
+                    {customAmt && customAmt > minAmount && (
+                      <div className="marathi text-xs text-green mt-1">
+                        अतिरिक्त: {formatRs(customAmt - minAmount)} — कर्ज जास्त कमी होईल ✓
+                      </div>
+                    )}
+                  </div>
+                )}
                 {!isPaid && (
-                  <div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {confirmId === member.id ? (
                       <div style={{ display: "flex", gap: 8 }}>
                         <button className="btn btn-green btn-sm" style={{ flex: 1 }} onClick={() => handleMarkPaid(member.id)}><span className="marathi">✓ हो, भरले</span></button>
                         <button className="btn btn-outline btn-sm" onClick={() => setConfirmId(null)}><span className="marathi">रद्द</span></button>
                       </div>
                     ) : (
-                      <button className="btn btn-blue btn-full btn-sm" onClick={() => setConfirmId(member.id)}><span>💳</span><span className="marathi"> रक्कम जमा करा</span></button>
+                      <button className="btn btn-blue btn-full btn-sm" onClick={() => setConfirmId(member.id)}><span>💳</span><span className="marathi"> रक्कम जमा करा {customAmt ? `(${formatRs(customAmt)})` : ""}</span></button>
+                    )}
+                    {member.balance > 0 && (
+                      foreclosureId === member.id ? (
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button className="btn btn-red btn-sm" style={{ flex: 1 }} onClick={() => handleForeclosure(member.id)}><span className="marathi">✓ हो, बंद करा</span></button>
+                          <button className="btn btn-outline btn-sm" onClick={() => setForeclosureId(null)}><span className="marathi">रद्द</span></button>
+                        </div>
+                      ) : (
+                        <button className="btn btn-sm btn-full" style={{ background: "#7B3F00", color: "#fff" }} onClick={() => setForeclosureId(member.id)}><span>🔒</span><span className="marathi"> Foreclosure — संपूर्ण कर्ज बंद करा ({formatRs(member.balance)})</span></button>
+                      )
                     )}
                   </div>
                 )}
                 {isPaid && (
                   <div>
-                    <div className="marathi text-xs text-green" style={{ textAlign: "right", marginBottom: 8 }}>✓ {entry.paidAt ? new Date(entry.paidAt).toLocaleDateString("mr-IN") : "भरले"}</div>
+                    <div className="marathi text-xs text-green" style={{ textAlign: "right", marginBottom: 8 }}>✓ {entry.paidAt ? new Date(entry.paidAt).toLocaleDateString("mr-IN") : "भरले"}{entry.customAmount > 0 ? ` — ${formatRs(entry.customAmount)} भरले` : ""}</div>
                     {undoId === member.id ? (
                       <div style={{ display: "flex", gap: 8 }}>
                         <button className="btn btn-red btn-sm" style={{ flex: 1 }} onClick={() => handleUndo(member.id)}><span className="marathi">हो, रद्द करा</span></button>
