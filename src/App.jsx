@@ -78,13 +78,13 @@ export default function App() {
 
   function setCurrentMonth(key) { setCurrentMonthState(key); saveCurrentMonth(key); }
 
-  const handleMarkPaid = useCallback((monthKey, memberId) => {
+  const handleMarkPaid = useCallback((monthKey, memberId, customAmount, isForeclosure) => {
     setMonths(prev => {
       const monthRecord = prev[monthKey];
       if (!monthRecord) return prev;
       const entry = monthRecord.entries[memberId];
       if (!entry || entry.paid) return prev;
-      const updatedEntry = { ...entry, paid: true, paidAt: Date.now() };
+      const updatedEntry = { ...entry, paid: true, paidAt: Date.now(), customAmount: customAmount || 0 };
       const updatedMonths = { ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]: updatedEntry } } };
       saveMonths(updatedMonths);
       setMembers(prevMembers => {
