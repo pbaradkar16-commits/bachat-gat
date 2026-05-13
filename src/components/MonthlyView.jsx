@@ -98,12 +98,7 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
                       type="number"
                       placeholder={`किमान ${formatRs(minAmount)}`}
                       value={customAmt || ""}
-                      onChange={e => {
-                        const val = Number(e.target.value);
-                        if (val >= minAmount || e.target.value === "") {
-                          setCustomAmounts(prev => ({ ...prev, [member.id]: val || null }));
-                        }
-                      }}
+                      onChange={e => { setCustomAmounts(prev => ({ ...prev, [member.id]: e.target.value === "" ? null : Number(e.target.value) })); }}
                       style={{ fontSize: 14, padding: "8px 12px" }}
                     />
                     {customAmt && customAmt > minAmount && (
