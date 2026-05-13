@@ -58,7 +58,7 @@ function PinScreen({ onSuccess }) {
 }
 
 export default function App() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
   const [activeTab, setActiveTab] = useState("dashboard");
   const [members, setMembers] = useState([]);
   const [months, setMonths] = useState({});
@@ -180,7 +180,7 @@ export default function App() {
   return (
     <div style={{ maxWidth:600, margin:"0 auto", minHeight:"100vh", background:"var(--bg)", position:"relative" }}>
       <ToastContainer />
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} onLock={() => setUnlocked(false)} />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} onLock={() => { setUnlocked(false); sessionStorage.removeItem("sssb_unlocked"); }} />
       <main>
         {activeTab==="dashboard" && <Dashboard members={members} months={months} currentMonth={currentMonth} setActiveTab={setActiveTab}/>}
         {activeTab==="monthly" && <MonthlyView members={members} months={months} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} onMarkPaid={handleMarkPaid} onUndoPaid={handleUndoPaid} onCreateNextMonth={handleCreateNextMonth}/>}
