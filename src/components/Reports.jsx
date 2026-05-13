@@ -26,13 +26,26 @@ export default function Reports({ members, months, currentMonth, onUpdateMembers
   }
 
   function handleNewLoan(member, amount) {
-    if (member.balance > 0) { alert("Juna karz aadhi purn kara!"); return; }
-    const updatedMembers = members.map(m => m.id === member.id ? { ...m, loanAmount: amount, balance: amount } : m);
+    if (member.balance > 0) { alert("जुने कर्ज आधी पूर्ण करा!"); return; }
+    const updatedMember = { ...member, loanAmount: amount, balance: amount };
+    const updatedMembers = members.map(m => m.id === member.id ? updatedMember : m);
     localStorage.setItem("sssb_members", JSON.stringify(updatedMembers));
     onUpdateMembers(updatedMembers);
+    const principal = Math.round(amount / 20);
+    const interest = Math.round(amount * 0.015);
+    const SAVING = 1000;
+    const updatedMonths = { ...months };
+    Object.keys(updatedMonths).forEach(mk => {
+      const mr = updatedMonths[mk];
+      if (mr.entries[member.id] && !mr.entries[member.id].paid) {
+        updatedMonths[mk] = { ...mr, entries: { ...mr.entries, [member.id]: { ...mr.entries[member.id], principal, interest, totalDue: SAVING+principal+interest, balanceBefore: amount, balanceAfter: Math.max(0, amount-principal) } } };
+      }
+    });
+    localStorage.setItem("sssb_months", JSON.stringify(updatedMonths));
+    onUpdateMonths(updatedMonths);
     setNewLoanMember(null);
     setNewLoanAmount("");
-    alert(`${member.name} - ${formatRs(amount)} karz dile!`);
+    alert(member.name + " यांना " + formatRs(amount) + " कर्ज दिले!");
   }
 
     function handlePDF() {
