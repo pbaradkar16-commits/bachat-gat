@@ -176,10 +176,27 @@ export default function App() {
       setMembers(prev => prev.map(m => m.id === member.id ? member : m));
     } else {
       const { data } = await supabase.from('members').insert({ group_id: GROUP_ID, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).select().single();
-      if (data) setMembers(prev => [...prev, { ...member, id: data.id }]);
+      if (data) {
+        const newMember = { ...member, id: data.id };
+        setMembers(prev => [...prev, newMember]);
+        setMonths(prev => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach(async (mk) => {
+            const mr = updated[mk];
+            const principal = calcEMI(member.loanAmount||0);
+            const interest = calcInterest(member.balance||0);
+            const entryData = { month_id: mr.db_id, member_id: data.id, saving: SAVING_AMOUNT, principal, interest, total_due: SAVING_AMOUNT+principal+interest, paid: false, balance_before: member.balance||0, balance_after: member.balance>0?Math.max(0,member.balance-principal):0 };
+            const { data: eData } = await supabase.from('entries').insert(entryData).select().single();
+            if (eData) {
+              updated[mk] = { ...mr, entries: { ...mr.entries, [data.id]: { memberId: data.id, db_id: eData.id, saving: SAVING_AMOUNT, principal, interest, totalDue: SAVING_AMOUNT+principal+interest, customAmount: 0, paid: false, paidAt: null, balanceBefore: member.balance||0, balanceAfter: member.balance>0?Math.max(0,member.balance-principal):0 } } };
+            }
+          });
+          return updated;
+        });
+      }
     }
     toast("माहिती जतन झाली ✓", "success");
-  }, []);
+  }, [months]);
 
   const handleDeleteMember = useCallback(async (memberId) => {
     await supabase.from('entries').delete().eq('member_id', memberId);
