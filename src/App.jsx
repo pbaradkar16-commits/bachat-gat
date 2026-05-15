@@ -173,6 +173,17 @@ export default function App() {
   const handleSaveMember = useCallback(async (member) => {
     if (member.id && member.id.includes('-')) {
       await supabase.from('members').update({ name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).eq('id', member.id);
+      const principal = calcEMI(member.loanAmount||0);
+      const interest = calcInterest(member.balance||0);
+      const updatedMonths = { ...months };
+      for (const mk of Object.keys(updatedMonths)) {
+        const mr = updatedMonths[mk];
+        if (mr.entries[member.id] && !mr.entries[member.id].paid) {
+          await supabase.from('entries').update({ principal, interest, total_due: SAVING_AMOUNT+principal+interest, balance_before: member.balance||0, balance_after: member.balance>0?Math.max(0,member.balance-principal):0 }).eq('id', mr.entries[member.id].db_id);
+          updatedMonths[mk] = { ...mr, entries: { ...mr.entries, [member.id]: { ...mr.entries[member.id], principal, interest, totalDue: SAVING_AMOUNT+principal+interest, balanceBefore: member.balance||0, balanceAfter: member.balance>0?Math.max(0,member.balance-principal):0 } } };
+        }
+      }
+      setMonths(updatedMonths);
       setMembers(prev => prev.map(m => m.id === member.id ? member : m));
     } else {
       const { data } = await supabase.from('members').insert({ group_id: GROUP_ID, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).select().single();
