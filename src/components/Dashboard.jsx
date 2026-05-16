@@ -14,7 +14,8 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
   const currentMonthSaving = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.saving || 0), 0) : 0;
   const currentMonthPrincipal = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.principal || 0), 0) : 0;
   const currentMonthInterest = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0) : 0;
-  const cashInHand = openingBalance + currentMonthSaving + currentMonthPrincipal + currentMonthInterest;
+  const totalCustomExtra = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid && e.customAmount > e.totalDue).reduce((s, e) => s + (e.customAmount - e.totalDue), 0) : 0;
+  const cashInHand = openingBalance + currentMonthSaving + currentMonthPrincipal + currentMonthInterest + totalCustomExtra;
   const cards = [
     { label: "चालू महिना संकलन", value: formatRs(stats.totalCollection), icon: "💰", color: "var(--green)", bg: "var(--green-light)", sub: `${stats.paidCount} / ${stats.totalMembers} सदस्य` },
     { label: "व्याज मिळाले", value: formatRs(stats.totalInterest), icon: "📈", color: "var(--blue)", bg: "var(--blue-light)", sub: "चालू महिना" },
@@ -92,7 +93,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
           </div>
           <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
             <span className="marathi" style={{color:"var(--text2)"}}>बचत संकलन</span>
-            <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(currentMonthSaving)}</span>
+            <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {currentMonthSaving > 0 ? formatRs(currentMonthSaving) : "₹0 (no payments yet)"}</span>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
             <span className="marathi" style={{color:"var(--text2)"}}>हप्ता वसुली</span>
