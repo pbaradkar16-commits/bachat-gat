@@ -59,14 +59,14 @@ function PinScreen({ onSuccess }) {
   );
 }
 
-async function loadMembersFromDB() {
-  const { data, error } = await supabase.from('members').select('*').eq('group_id', selectedGroup.id).order('created_at', { ascending: true });
+async function loadMembersFromDB(groupId) {
+  const { data, error } = await supabase.from('members').select('*').eq('group_id', groupId).order('created_at', { ascending: true });
   if (error) { console.error('loadMembers error:', error); return []; }
   return (data || []).map(m => ({ id: m.id, name: m.name, phone: m.phone||"", loanAmount: Number(m.loan_amount)||0, balance: Number(m.balance)||0 }));
 }
 
-async function loadMonthsFromDB(members) {
-  const { data: monthsData, error: mError } = await supabase.from('months').select('*').eq('group_id', selectedGroup.id);
+async function loadMonthsFromDB(members, groupId) {
+  const { data: monthsData, error: mError } = await supabase.from('months').select('*').eq('group_id', groupId);
   if (mError) { console.error('loadMonths error:', mError); return {}; }
   if (!monthsData || monthsData.length === 0) return {};
   const months = {};
@@ -81,8 +81,8 @@ async function loadMonthsFromDB(members) {
   return months;
 }
 
-async function createMonthInDB(members, key) {
-  const { data: monthData, error } = await supabase.from('months').insert({ group_id: selectedGroup.id, month_key: key, bank_balance: 0 }).select().single();
+async function createMonthInDB(members, key, groupId) {
+  const { data: monthData, error } = await supabase.from('months').insert({ group_id: groupId, month_key: key, bank_balance: 0 }).select().single();
   if (error) { console.error('createMonth error:', error); return null; }
   const entriesInsert = members.map(m => {
     const principal = calcEMI(m.loanAmount);
@@ -111,13 +111,13 @@ export default function App() {
     async function init() {
       setLoading(true);
       try {
-        const m = await loadMembersFromDB();
+        const m = await loadMembersFromDB(selectedGroup.id);
         setMembers(m);
         const cm = loadCurrentMonth();
         setCurrentMonthState(cm);
-        let mo = await loadMonthsFromDB(m);
+        let mo = await loadMonthsFromDB(m, selectedGroup.id);
         if (!mo[cm]) {
-          const newMonth = await createMonthInDB(m, cm);
+          const newMonth = await createMonthInDB(m, cm, selectedGroup.id);
           if (newMonth) mo = { ...mo, [cm]: newMonth };
         }
         setMonths(mo);
@@ -164,7 +164,7 @@ export default function App() {
   const handleCreateNextMonth = useCallback(async (forMonthKey) => {
     const targetKey = forMonthKey ? forMonthKey : nextMonthKey(currentMonth);
     if (months[targetKey]) { setCurrentMonth(targetKey); return; }
-    const newMonth = await createMonthInDB(members, targetKey);
+    const newMonth = await createMonthInDB(members, targetKey, selectedGroup.id);
     if (newMonth) {
       setMonths(prev => ({ ...prev, [targetKey]: newMonth }));
       setCurrentMonth(targetKey);
