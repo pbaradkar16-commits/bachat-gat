@@ -101,10 +101,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
             <span className="marathi" style={{color:"var(--text2)"}}>व्याज वसुली</span>
             <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(currentMonthInterest)}</span>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"2px solid #1A7F4B"}}>
-            <span className="marathi" style={{color:"var(--red)"}}>नवीन कर्जे दिली</span>
-            <span style={{fontWeight:700,color:"var(--red)"}}>- {formatRs(totalLoansGiven)}</span>
-          </div>
+          
           <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",background:"#E8F7EF",borderRadius:8,paddingLeft:8,paddingRight:8,marginTop:4}}>
             <span className="marathi" style={{fontWeight:700,fontSize:15}}>💵 शिल्लक रोख</span>
             <span style={{fontWeight:700,fontSize:18,color:"#1A7F4B"}}>{formatRs(cashInHand)}</span>
