@@ -52,24 +52,103 @@ export default function Reports({ members, months, currentMonth, onUpdateMembers
     if (!monthRecord) return;
     const [y,mo] = selectedMonth.split("-");
     const monthName = MMR[parseInt(mo)-1] + " " + y;
-    const rows = members.map(mb => {
-      const e = monthRecord.entries[mb.id];
-      if (!e) return "";
-      const amt = e.customAmount || e.totalDue;
-      const color = e.paid ? "#f0fff4" : "#fff5f5";
-      const statusColor = e.paid ? "#1A7F4B" : "#C62828";
-      const status = e.paid ? "✓ भरले" : "बाकी";
-      return `<tr style="border-bottom:1px solid #eee;background:${color}"><td style="padding:8px;font-family:serif;">${mb.name}</td><td style="padding:8px;text-align:right;">${formatRs(e.saving)}</td><td style="padding:8px;text-align:right;">${formatRs(e.principal)}</td><td style="padding:8px;text-align:right;color:#C62828;">${formatRs(e.interest)}</td><td style="padding:8px;text-align:right;font-weight:700;">${formatRs(amt)}</td><td style="padding:8px;text-align:center;color:${statusColor};font-weight:700;">${status}</td></tr>`;
-    }).join("");
-    const bankBal = bankBalances[selectedMonth] || 0;
-    const html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><link href=\"https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=DM+Sans:wght@400;700&display=swap\" rel=\"stylesheet\"/><title>" + monthName + " अहवाल</title><style>body{font-family:\"DM Sans\",sans-serif;margin:0;padding:20px;color:#1C1008;}.marathi{font-family:\"Tiro Devanagari Marathi\",serif;}h1,h2,h3{font-family:\"Tiro Devanagari Marathi\",serif;color:#E8650A;text-align:center;margin:4px 0;}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}.box{background:#FFF3E8;border-radius:8px;padding:12px;text-align:center;border:1px solid #E8650A;}.box-val{font-size:18px;font-weight:700;color:#1A7F4B;}.box-lbl{font-family:\"Tiro Devanagari Marathi\",serif;font-size:11px;color:#9C8060;margin-top:4px;}table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px;}th{background:#FFF3E8;padding:10px 8px;font-weight:700;border-bottom:2px solid #E8650A;text-align:right;}th:first-child{text-align:left;}.footer{text-align:center;margin-top:20px;color:#9C8060;font-size:11px;}.print-btn{display:block;margin:20px auto;padding:12px 30px;background:#E8650A;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;}@media print{.print-btn{display:none!important;}}</style></head><body><h1>🪔 श्री शीतला देवी पुरुष बचत गट बारड</h1><h3>तालुका मुदखेड · जि. नांदेड</h3><h2>" + monthName + " - मासिक अहवाल</h2><div class=\"summary\"><div class=\"box\"><div class=\"box-val\">" + formatRs(stats.totalCollection) + "</div><div class=\"box-lbl\">एकूण संकलन</div></div><div class=\"box\"><div class=\"box-val\">" + formatRs(stats.totalInterest) + "</div><div class=\"box-lbl\">व्याज</div></div><div class=\"box\"><div class=\"box-val\">" + stats.paidCount + "/" + stats.totalMembers + "</div><div class=\"box-lbl\">भरले</div></div></div><table><thead><tr><th style=\"text-align:left;\" class=\"marathi\">सदस्य</th><th class=\"marathi\">बचत</th><th class=\"marathi\">हप्ता</th><th class=\"marathi\">व्याज</th><th class=\"marathi\">एकूण</th><th class=\"marathi\">स्थिती</th></tr></thead><tbody>" + rows + "</tbody><tfoot><tr style=\"background:#FFF3E8;font-weight:700;\"><td class=\"marathi\" style=\"padding:10px;\">एकूण</td><td style=\"padding:10px;text-align:right;\">" + formatRs(stats.totalSaving) + "</td><td style=\"padding:10px;text-align:right;\">" + formatRs(stats.totalPrincipal||0) + "</td><td style=\"padding:10px;text-align:right;color:#C62828;\">" + formatRs(stats.totalInterest) + "</td><td style=\"padding:10px;text-align:right;color:#1A7F4B;font-size:16px;\">" + formatRs(stats.totalCollection) + "</td><td></td></tr></tfoot></table>" + (bankBal>0?"<div style=\"background:#E8F7EF;border-radius:8px;padding:16px;margin-top:16px;\"><h3 style=\"color:#1A7F4B;margin:0 0 12px;\">📊 Balance Sheet</h3><table style=\"margin:0;\"><tr><td class=\"marathi\">Bank मधील शिल्लक</td><td style=\"text-align:right;font-weight:700;\">" + formatRs(bankBal) + "</td></tr><tr><td class=\"marathi\">थकीत कर्जे</td><td style=\"text-align:right;font-weight:700;\">" + formatRs(members.reduce((s,m)=>s+m.balance,0)) + "</td></tr><tr style=\"background:#1A7F4B;color:#fff;\"><td class=\"marathi\" style=\"padding:8px;font-weight:700;\">Group एकूण मालमत्ता</td><td style=\"padding:8px;text-align:right;font-weight:700;\">" + formatRs(bankBal+members.reduce((s,m)=>s+m.balance,0)) + "</td></tr></table></div>":"") + "<div class=\"footer\">दिनांक: " + new Date().toLocaleDateString("mr-IN") + " | BachatMitra - पवन भिमेवार अँड असोसिएट्स, नांदेड</div><button class=\"print-btn\" onclick=\"window.print()\">🖨️ PDF Save करा / Print करा</button></body></html>";
-    const blob = new Blob([html], {type: 'text/html'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'BachatMitra-' + monthName + '-Report.html';
-    a.click();
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    
+    // Header
+    doc.setFillColor(232, 101, 10);
+    doc.rect(0, 0, 210, 25, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Shri Sheetala Devi Purush Bachat Gat Barad", 105, 10, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Taluka Mudkhed, Jilha Nanded", 105, 17, { align: "center" });
+    doc.text(monthName + " - Monthly Report", 105, 23, { align: "center" });
+
+    // Summary boxes
+    doc.setTextColor(0, 0, 0);
+    doc.setFillColor(255, 243, 232);
+    doc.rect(10, 30, 58, 18, "F");
+    doc.rect(76, 30, 58, 18, "F");
+    doc.rect(142, 30, 58, 18, "F");
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(26, 127, 75);
+    doc.text(formatRs(stats.totalCollection), 39, 39, { align: "center" });
+    doc.text(formatRs(stats.totalInterest), 105, 39, { align: "center" });
+    doc.text(stats.paidCount + "/" + stats.totalMembers, 171, 39, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+    doc.text("Eekun Sankalan", 39, 45, { align: "center" });
+    doc.text("Vyaj", 105, 45, { align: "center" });
+    doc.text("Bharale", 171, 45, { align: "center" });
+
+    // Table header
+    let rowY = 55;
+    doc.setFillColor(232, 101, 10);
+    doc.rect(10, rowY, 190, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Sadasy", 12, y+5.5);
+    doc.text("Bachat", 75, y+5.5, { align: "right" });
+    doc.text("Hapta", 100, y+5.5, { align: "right" });
+    doc.text("Vyaj", 125, y+5.5, { align: "right" });
+    doc.text("Eekun", 152, y+5.5, { align: "right" });
+    doc.text("Shillak", 178, y+5.5, { align: "right" });
+    doc.text("Status", 198, y+5.5, { align: "right" });
+    rowY += 8;
+
+    // Table rows
+    members.forEach((m, i) => {
+      const e = monthRecord.entries[m.id];
+      if (!e) return;
+      if (i % 2 === 0) {
+        doc.setFillColor(255, 248, 240);
+        doc.rect(10, rowY, 190, 7, "F");
+      }
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      const name = m.name.length > 20 ? m.name.substring(0, 20) + "." : m.name;
+      doc.text(name, 12, rowY+5);
+      doc.text(formatRs(e.saving), 75, y+5, { align: "right" });
+      doc.text(formatRs(e.principal), 100, y+5, { align: "right" });
+      doc.setTextColor(198, 40, 40);
+      doc.text(formatRs(e.interest), 125, y+5, { align: "right" });
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "bold");
+      doc.text(formatRs(e.customAmount || e.totalDue), 152, y+5, { align: "right" });
+      doc.setTextColor(26, 127, 75);
+      doc.text(formatRs(m.balance), 178, y+5, { align: "right" });
+      doc.setTextColor(e.paid ? 26 : 198, e.paid ? 127 : 40, e.paid ? 75 : 40);
+      doc.text(e.paid ? "Bharale" : "Baki", 198, y+5, { align: "right" });
+      rowY += 7;
+    });
+
+    // Total row
+    doc.setFillColor(255, 243, 232);
+    doc.rect(10, rowY, 190, 8, "F");
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("Eekun", 12, y+5.5);
+    doc.text(formatRs(stats.totalSaving), 75, y+5.5, { align: "right" });
+    doc.text(formatRs(stats.totalPrincipal||0), 100, y+5.5, { align: "right" });
+    doc.setTextColor(198, 40, 40);
+    doc.text(formatRs(stats.totalInterest), 125, y+5.5, { align: "right" });
+    doc.setTextColor(26, 127, 75);
+    doc.text(formatRs(stats.totalCollection), 152, y+5.5, { align: "right" });
+
+    // Footer
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.text("BachatMitra - Pawan Bhimewar & Associates, Nanded | Date: " + new Date().toLocaleDateString("en-IN"), 105, 290, { align: "center" });
+
+    doc.save("BachatMitra-" + monthName + ".pdf");
   }
 
   function shareWhatsApp() {
