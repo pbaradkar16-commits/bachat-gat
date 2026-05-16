@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase.js";
 import GroupSelect from "./components/GroupSelect.jsx";
-import { monthLabel, nextMonthKey, todayMonthKey, calcEMI, calcInterest, SAVING_AMOUNT, loadCurrentMonth, saveCurrentMonth } from "./store.js";
+import { monthLabel, nextMonthKey, prevMonthKey, todayMonthKey, calcEMI, calcInterest, SAVING_AMOUNT, loadCurrentMonth, saveCurrentMonth } from "./store.js";
 import Header from "./components/Header.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import MonthlyView from "./components/MonthlyView.jsx";
@@ -81,13 +81,20 @@ async function loadMonthsFromDB(members, groupId) {
   return months;
 }
 
-async function createMonthInDB(members, key, groupId) {
+async function createMonthInDB(members, key, groupId, allMonths) {
+  const prevKey = prevMonthKey(key);
+  const prevMonth = allMonths ? allMonths[prevKey] : null;
   const { data: monthData, error } = await supabase.from('months').insert({ group_id: groupId, month_key: key, bank_balance: 0 }).select().single();
   if (error) { console.error('createMonth error:', error); return null; }
   const entriesInsert = members.map(m => {
+    let openingBalance = m.balance;
+    if (prevMonth && prevMonth.entries[m.id]) {
+      const prevEntry = prevMonth.entries[m.id];
+      openingBalance = prevEntry.paid ? prevEntry.balanceAfter : prevEntry.balanceBefore;
+    }
     const principal = calcEMI(m.loanAmount);
-    const interest = calcInterest(m.balance);
-    return { month_id: monthData.id, member_id: m.id, saving: SAVING_AMOUNT, principal, interest, total_due: SAVING_AMOUNT+principal+interest, paid: false, balance_before: m.balance, balance_after: m.balance>0?Math.max(0,m.balance-principal):0 };
+    const interest = calcInterest(openingBalance);
+    return { month_id: monthData.id, member_id: m.id, saving: SAVING_AMOUNT, principal, interest, total_due: SAVING_AMOUNT+principal+interest, paid: false, balance_before: openingBalance, balance_after: openingBalance>0?Math.max(0,openingBalance-principal):0 };
   });
   const { data: entriesData } = await supabase.from('entries').insert(entriesInsert).select();
   const entries = {};
@@ -117,7 +124,7 @@ export default function App() {
         setCurrentMonthState(cm);
         let mo = await loadMonthsFromDB(m, selectedGroup.id);
         if (!mo[cm]) {
-          const newMonth = await createMonthInDB(m, cm, selectedGroup.id);
+          const newMonth = await createMonthInDB(m, cm, selectedGroup.id, mo);
           if (newMonth) mo = { ...mo, [cm]: newMonth };
         }
         setMonths(mo);
@@ -164,7 +171,7 @@ export default function App() {
   const handleCreateNextMonth = useCallback(async (forMonthKey) => {
     const targetKey = forMonthKey ? forMonthKey : nextMonthKey(currentMonth);
     if (months[targetKey]) { setCurrentMonth(targetKey); return; }
-    const newMonth = await createMonthInDB(members, targetKey, selectedGroup.id);
+    const newMonth = await createMonthInDB(members, targetKey, selectedGroup.id, months);
     if (newMonth) {
       setMonths(prev => ({ ...prev, [targetKey]: newMonth }));
       setCurrentMonth(targetKey);
