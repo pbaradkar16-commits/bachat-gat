@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { jsPDF } from "jspdf";
-import { monthLabel, formatRs, getMonthStats, getGroupBalanceSheet, loadBankBalances, saveBankBalances } from "../store.js";
+import { monthLabel, formatRs, getMonthNumber, getMonthStats, getGroupBalanceSheet, loadBankBalances, saveBankBalances } from "../store.js";
 export default function Reports({ members, months, currentMonth, onUpdateMembers, onUpdateMonths }) {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [view, setView] = useState("monthly");
@@ -51,7 +51,7 @@ export default function Reports({ members, months, currentMonth, onUpdateMembers
     function handlePDF() {
     if (!monthRecord) return;
     const [y,mo] = selectedMonth.split("-");
-    const monthName = MMR[parseInt(mo)-1] + " " + y;
+    const monthName = MMR[parseInt(mo)-1] + " " + y + " (महिना क्र. " + getMonthNumber(selectedMonth) + ")";
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     
     // Header
