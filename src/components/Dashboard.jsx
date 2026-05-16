@@ -5,6 +5,11 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
   const totalOutstanding = members.reduce((s, m) => s + (m.balance || 0), 0);
   const activeLoans = members.filter((m) => m.balance > 0).length;
   const allTimeCollection = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + e.totalDue, 0), 0);
+  const totalLoansGiven = members.reduce((s, m) => s + (m.loanAmount || 0), 0);
+  const totalPrincipalRecovered = members.reduce((s, m) => s + ((m.loanAmount || 0) - (m.balance || 0)), 0);
+  const totalSavingsAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.saving || 0), 0), 0);
+  const totalInterestAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0), 0);
+  const cashInHand = totalSavingsAllTime + totalPrincipalRecovered + totalInterestAllTime - totalLoansGiven;
   const cards = [
     { label: "चालू महिना संकलन", value: formatRs(stats.totalCollection), icon: "💰", color: "var(--green)", bg: "var(--green-light)", sub: `${stats.paidCount} / ${stats.totalMembers} सदस्य` },
     { label: "व्याज मिळाले", value: formatRs(stats.totalInterest), icon: "📈", color: "var(--blue)", bg: "var(--blue-light)", sub: "चालू महिना" },
@@ -12,6 +17,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
     { label: "थकबाकी सदस्य", value: stats.pendingCount, icon: "⏳", color: "var(--red)", bg: "var(--red-light)", sub: "या महिन्यात बाकी" },
     { label: "सक्रिय कर्जे", value: activeLoans, icon: "📄", color: "#7B3F00", bg: "#FFF3E0", sub: `थकबाकी ${formatRs(totalOutstanding)}` },
     { label: "एकूण संकलन", value: formatRs(allTimeCollection), icon: "🏆", color: "#4A148C", bg: "#F3E5F5", sub: "सर्व महिने मिळून" },
+    { label: "रोख शिल्लक", value: formatRs(cashInHand), icon: "💵", color: "#1A7F4B", bg: "#E8F7EF", sub: "बचत + वसुली - कर्ज" },
   ];
   function shareWhatsApp() {
     const M = ["जानेवारी","फेब्रुवारी","मार्च","एप्रिल","मे","जून","जुलै","ऑगस्ट","सप्टेंबर","ऑक्टोबर","नोव्हेंबर","डिसेंबर"];
