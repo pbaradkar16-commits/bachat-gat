@@ -141,10 +141,80 @@ export default function Reports({ members, months, currentMonth, onUpdateMembers
     doc.save(`Certificate-${member.name}.pdf`);
   }
 
+
+  function handleMeetingReport() {
+    if (!monthRecord) return;
+    const [y,mo] = selectedMonth.split('-');
+    const monthName = MMR[parseInt(mo)-1] + ' ' + y;
+    const rows = members.map((mb,i) => {
+      const e = monthRecord.entries[mb.id];
+      if (!e) return '';
+      const balBefore = e.balanceBefore || mb.balance;
+      const principal = e.principal || 0;
+      const interest = e.interest || 0;
+      const saving = e.saving || 1000;
+      const totalDue = saving + principal + interest;
+      const balAfter = balBefore > 0 ? Math.max(0, balBefore - principal) : 0;
+      const bg = i%2===0 ? '#fff' : '#FFF8F0';
+      return '<tr style="background:' + bg + ';border-bottom:1px solid #eee;">'
+        + '<td style="padding:8px;">' + mb.name + '</td>'
+        + '<td style="padding:8px;text-align:right;color:#E8650A;font-weight:700;">' + formatRs(balBefore) + '</td>'
+        + '<td style="padding:8px;text-align:right;">' + formatRs(saving) + '</td>'
+        + '<td style="padding:8px;text-align:right;">' + formatRs(principal) + '</td>'
+        + '<td style="padding:8px;text-align:right;color:#C62828;">' + formatRs(interest) + '</td>'
+        + '<td style="padding:8px;text-align:right;font-weight:700;color:#1A7F4B;">' + formatRs(totalDue) + '</td>'
+        + '<td style="padding:8px;text-align:right;color:#1565C0;font-weight:700;">' + formatRs(balAfter) + '</td>'
+        + '</tr>';
+    }).join('');
+    const totalDue = members.reduce((s,mb) => {
+      const e = monthRecord.entries[mb.id];
+      if (!e) return s;
+      return s + e.saving + e.principal + e.interest;
+    }, 0);
+    const totalAfter = members.reduce((s,mb) => {
+      const e = monthRecord.entries[mb.id];
+      if (!e) return s;
+      const bal = e.balanceBefore || mb.balance;
+      return s + (bal > 0 ? Math.max(0, bal - e.principal) : 0);
+    }, 0);
+    const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+      + '<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&display=swap" rel="stylesheet"/>'
+      + '<style>body{font-family:sans-serif;padding:20px;}h1,h2,h3{color:#E8650A;text-align:center;}.marathi{font-family:"Tiro Devanagari Marathi",serif;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#E8650A;color:#fff;padding:8px;text-align:right;}th:first-child{text-align:left;}td{padding:8px;border-bottom:1px solid #eee;}.footer{text-align:center;margin-top:20px;color:#999;font-size:11px;}.btn{display:block;margin:20px auto;padding:12px 30px;background:#E8650A;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;}@media print{.btn{display:none;}}</style>'
+      + '</head><body>'
+      + '<h1 class="marathi">🪔 श्री शीतला देवी पुरुष बचत गट बारड</h1>'
+      + '<h3 class="marathi">तालुका मुदखेड · जि. नांदेड</h3>'
+      + '<h2 class="marathi">' + monthName + ' - बैठक अहवाल</h2>'
+      + '<p class="marathi" style="text-align:center;color:#666;">📅 दिनांक: 10 ' + monthName + ' | Payment आधीचा अहवाल</p>'
+      + '<table><thead><tr>'
+      + '<th class="marathi" style="text-align:left;">सदस्य</th>'
+      + '<th class="marathi">शिल्लक (आधी)</th>'
+      + '<th class="marathi">बचत</th>'
+      + '<th class="marathi">हप्ता</th>'
+      + '<th class="marathi">व्याज</th>'
+      + '<th class="marathi">किमान देणे</th>'
+      + '<th class="marathi">शिल्लक (नंतर)</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody>'
+      + '<tfoot><tr style="background:#FFF3E8;font-weight:700;">'
+      + '<td class="marathi" style="padding:10px;">एकूण</td>'
+      + '<td></td><td></td><td></td><td></td>'
+      + '<td style="padding:10px;text-align:right;color:#1A7F4B;">' + formatRs(totalDue) + '</td>'
+      + '<td style="padding:10px;text-align:right;color:#1565C0;">' + formatRs(totalAfter) + '</td>'
+      + '</tr></tfoot></table>'
+      + '<div class="footer">BachatMitra - पवन भिमेवार अँड असोसिएट्स, नांदेड</div>'
+      + '<button class="btn" onclick="window.print()">🖨️ Print / PDF Save करा</button>'
+      + '</body></html>';
+    const blob = new Blob([html], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'BachatMitra-Meeting-' + monthName + '.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
   return (
     <div style={{ padding: "16px 16px 100px" }}>
       <div style={{ display:"flex", gap:6, marginBottom:16, flexWrap:"wrap" }}>
-        {[["monthly","📋 मासिक"],["balance","📊 Balance"],["loans","💳 कर्ज"],["history","📜 इतिहास"],["backup","💾 बॅकअप"]].map(([v,l]) => (
+        {[["monthly","📋 मासिक"],["meeting","🤝 बैठक"],["balance","📊 Balance"],["loans","💳 कर्ज"],["history","📜 इतिहास"],["backup","💾 बॅकअप"]].map(([v,l]) => (
           <button key={v} onClick={()=>setView(v)} style={{ flex:1, minWidth:60, padding:"8px 2px", fontSize:10, background:view===v?"var(--saffron)":"var(--surface)", color:view===v?"#fff":"var(--text2)", border:"1.5px solid", borderColor:view===v?"var(--saffron)":"var(--border)", borderRadius:8, cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>
             <span className="marathi">{l}</span>
           </button>
@@ -189,7 +259,63 @@ export default function Reports({ members, months, currentMonth, onUpdateMembers
         </div>
       )}
 
-      {view === "balance" && (
+      
+      {view === "meeting" && (
+        <div>
+          <div style={{marginBottom:14}}>
+            <label className="marathi">महिना निवडा</label>
+            <select className="input marathi" value={selectedMonth} onChange={e=>setSelectedMonth(e.target.value)}>
+              {monthKeys.map(k=><option key={k} value={k}>{monthLabel(k)}</option>)}
+            </select>
+          </div>
+          {!monthRecord
+            ? <div className="marathi text-center text-muted" style={{padding:40}}>या महिन्याची नोंद नाही</div>
+            : (
+            <>
+              <div style={{background:"#FFF8E1",borderRadius:12,padding:14,border:"1px solid #F4A825",marginBottom:16}}>
+                <div className="marathi font-bold" style={{color:"#B8860B",marginBottom:4}}>📋 बैठक अहवाल</div>
+                <div className="marathi text-sm" style={{color:"#B8860B"}}>10 तारखेच्या बैठकीसाठी — Payment आधी generate करा.</div>
+              </div>
+              <div className="card" style={{overflow:"hidden",marginBottom:16}}>
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                    <thead>
+                      <tr style={{background:"#E8650A"}}>
+                        {["सदस्य","शिल्लक (आधी)","बचत","हप्ता","व्याज","किमान देणे","शिल्लक (नंतर)"].map(h=>(
+                          <th key={h} className="marathi" style={{padding:"8px",textAlign:"right",fontSize:10,fontWeight:700,color:"#fff",whiteSpace:"nowrap"}}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {members.map((m,i)=>{
+                        const e = monthRecord.entries[m.id];
+                        if (!e) return null;
+                        const balBefore = e.balanceBefore || m.balance;
+                        const balAfter = balBefore > 0 ? Math.max(0, balBefore - e.principal) : 0;
+                        return (
+                          <tr key={m.id} style={{borderBottom:"1px solid #F5F0EA",background:i%2===0?"#fff":"var(--surface2)"}}>
+                            <td className="marathi" style={{padding:"6px",fontWeight:600,fontSize:11,textAlign:"left"}}>{m.name}</td>
+                            <td style={{padding:"6px",textAlign:"right",color:"#E8650A",fontWeight:700}}>{formatRs(balBefore)}</td>
+                            <td style={{padding:"6px",textAlign:"right"}}>{formatRs(e.saving)}</td>
+                            <td style={{padding:"6px",textAlign:"right"}}>{formatRs(e.principal)}</td>
+                            <td style={{padding:"6px",textAlign:"right",color:"var(--red)"}}>{formatRs(e.interest)}</td>
+                            <td style={{padding:"6px",textAlign:"right",fontWeight:700,color:"var(--green)"}}>{formatRs(e.saving+e.principal+e.interest)}</td>
+                            <td style={{padding:"6px",textAlign:"right",color:"var(--blue)",fontWeight:700}}>{formatRs(balAfter)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <button className="btn btn-saffron btn-full" onClick={handleMeetingReport}>
+                <span>📄</span><span className="marathi"> बैठक Report Download करा</span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+{view === "balance" && (
         <div style={{display:"flex",flexDirection:"column",gap:16}}>
           <div className="card card-body">
             <div className="marathi font-bold mb-3" style={{fontSize:16}}>📊 Group Balance Sheet</div>
