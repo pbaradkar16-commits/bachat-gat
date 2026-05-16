@@ -10,7 +10,10 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
   const totalSavingsAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.saving || 0), 0), 0);
   const totalInterestAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0), 0);
   const openingBalance = Number(localStorage.getItem('sssb_opening_balance') || 0);
-  const cashInHand = openingBalance + totalSavingsAllTime + totalPrincipalRecovered + totalInterestAllTime - totalLoansGiven;
+  const currentMonthSaving = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.saving || 0), 0), 0);
+  const currentMonthPrincipal = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.principal || 0), 0), 0);
+  const currentMonthInterest = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0), 0);
+  const cashInHand = openingBalance + currentMonthSaving + currentMonthPrincipal + currentMonthInterest - totalLoansGiven;
   const cards = [
     { label: "चालू महिना संकलन", value: formatRs(stats.totalCollection), icon: "💰", color: "var(--green)", bg: "var(--green-light)", sub: `${stats.paidCount} / ${stats.totalMembers} सदस्य` },
     { label: "व्याज मिळाले", value: formatRs(stats.totalInterest), icon: "📈", color: "var(--blue)", bg: "var(--blue-light)", sub: "चालू महिना" },
@@ -78,6 +81,35 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
           }}><span className="marathi">जतन</span></button>
         </div>
         <div className="marathi text-xs text-muted" style={{marginTop:6}}>हे एकदाच set करा — नंतर automatically calculate होईल</div>
+      </div>
+      <div className="card card-body" style={{marginBottom:16,border:"2px solid #1A7F4B"}}>
+        <div className="marathi font-bold" style={{fontSize:15,marginBottom:12,color:"#1A7F4B"}}>📊 Cash in Hand — हिशोब</div>
+        <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:13}}>
+          <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
+            <span className="marathi" style={{color:"var(--text2)"}}>माजील शिलमक</span>
+            <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(openingBalance)}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
+            <span className="marathi" style={{color:"var(--text2)"}}>बचत संकलन</span>
+            <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(currentMonthSaving)}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
+            <span className="marathi" style={{color:"var(--text2)"}}>हप्ता वसुली</span>
+            <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(currentMonthPrincipal)}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
+            <span className="marathi" style={{color:"var(--text2)"}}>व्याज वसुली</span>
+            <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(currentMonthInterest)}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"2px solid #1A7F4B"}}>
+            <span className="marathi" style={{color:"var(--red)"}}>नवीन कर्जे दिली</span>
+            <span style={{fontWeight:700,color:"var(--red)"}}>- {formatRs(totalLoansGiven)}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",background:"#E8F7EF",borderRadius:8,paddingLeft:8,paddingRight:8,marginTop:4}}>
+            <span className="marathi" style={{fontWeight:700,fontSize:15}}>💵 शिल्लक रोख</span>
+            <span style={{fontWeight:700,fontSize:18,color:"#1A7F4B"}}>{formatRs(cashInHand)}</span>
+          </div>
+        </div>
       </div>
       <button className="btn btn-saffron btn-full" onClick={() => setActiveTab("monthly")}><span>📋</span><span className="marathi"> मासिक हजेरी भरा</span></button>
         <button className="btn btn-green btn-full" onClick={shareWhatsApp}><span>📲</span><span className="marathi"> WhatsApp वर Report Share करा</span></button>
