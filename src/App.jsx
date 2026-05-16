@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase, GROUP_ID } from "./supabase.js";
+import { supabase } from "./supabase.js";
+import GroupSelect from "./components/GroupSelect.jsx";
 import { monthLabel, nextMonthKey, todayMonthKey, calcEMI, calcInterest, SAVING_AMOUNT, loadCurrentMonth, saveCurrentMonth } from "./store.js";
 import Header from "./components/Header.jsx";
 import Dashboard from "./components/Dashboard.jsx";
@@ -59,13 +60,13 @@ function PinScreen({ onSuccess }) {
 }
 
 async function loadMembersFromDB() {
-  const { data, error } = await supabase.from('members').select('*').eq('group_id', GROUP_ID).order('created_at', { ascending: true });
+  const { data, error } = await supabase.from('members').select('*').eq('group_id', selectedGroup.id).order('created_at', { ascending: true });
   if (error) { console.error('loadMembers error:', error); return []; }
   return (data || []).map(m => ({ id: m.id, name: m.name, phone: m.phone||"", loanAmount: Number(m.loan_amount)||0, balance: Number(m.balance)||0 }));
 }
 
 async function loadMonthsFromDB(members) {
-  const { data: monthsData, error: mError } = await supabase.from('months').select('*').eq('group_id', GROUP_ID);
+  const { data: monthsData, error: mError } = await supabase.from('months').select('*').eq('group_id', selectedGroup.id);
   if (mError) { console.error('loadMonths error:', mError); return {}; }
   if (!monthsData || monthsData.length === 0) return {};
   const months = {};
@@ -81,7 +82,7 @@ async function loadMonthsFromDB(members) {
 }
 
 async function createMonthInDB(members, key) {
-  const { data: monthData, error } = await supabase.from('months').insert({ group_id: GROUP_ID, month_key: key, bank_balance: 0 }).select().single();
+  const { data: monthData, error } = await supabase.from('months').insert({ group_id: selectedGroup.id, month_key: key, bank_balance: 0 }).select().single();
   if (error) { console.error('createMonth error:', error); return null; }
   const entriesInsert = members.map(m => {
     const principal = calcEMI(m.loanAmount);
@@ -98,6 +99,7 @@ async function createMonthInDB(members, key) {
 
 export default function App() {
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
+  const [selectedGroup, setSelectedGroup] = useState(() => { try { return JSON.parse(sessionStorage.getItem("sssb_group") || "null"); } catch { return null; } });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [members, setMembers] = useState([]);
@@ -186,7 +188,7 @@ export default function App() {
       setMonths(updatedMonths);
       setMembers(prev => prev.map(m => m.id === member.id ? member : m));
     } else {
-      const { data } = await supabase.from('members').insert({ group_id: GROUP_ID, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).select().single();
+      const { data } = await supabase.from('members').insert({ group_id: selectedGroup.id, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).select().single();
       if (data) {
         const newMember = { ...member, id: data.id };
         const principal = calcEMI(member.loanAmount||0);
@@ -215,6 +217,7 @@ export default function App() {
   }, []);
 
   if (!unlocked) return <PinScreen onSuccess={() => { setUnlocked(true); sessionStorage.setItem("sssb_unlocked","true"); }} />;
+  if (!selectedGroup) return <GroupSelect onSelect={(g) => { setSelectedGroup(g); sessionStorage.setItem("sssb_group", JSON.stringify(g)); }} />;
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
