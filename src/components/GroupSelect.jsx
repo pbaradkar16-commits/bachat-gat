@@ -8,6 +8,7 @@ export default function GroupSelect({ onSelect }) {
   const [newName, setNewName] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [saving, setSaving] = useState(false);
+  const [meetingDay, setMeetingDay] = useState(10);
 
   useEffect(() => { loadGroups(); }, []);
 
@@ -21,7 +22,7 @@ export default function GroupSelect({ onSelect }) {
   async function handleCreateGroup() {
     if (!newName.trim()) { alert("गट नाव भरा!"); return; }
     setSaving(true);
-    const { data } = await supabase.from('groups').insert({ name: newName.trim(), address: newAddress.trim() }).select().single();
+    const { data } = await supabase.from('groups').insert({ name: newName.trim(), address: newAddress.trim(), meeting_day: meetingDay }).select().single();
     if (data) { setGroups(prev => [...prev, data]); setShowNew(false); setNewName(""); setNewAddress(""); onSelect(data); }
     setSaving(false);
   }
