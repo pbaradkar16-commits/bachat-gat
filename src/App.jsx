@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import LicenseScreen from "./components/LicenseScreen.jsx";
 import { supabase } from "./supabase.js";
 import GroupSelect from "./components/GroupSelect.jsx";
 import { monthLabel, nextMonthKey, prevMonthKey, todayMonthKey, calcEMI, calcInterest, SAVING_AMOUNT, loadCurrentMonth, saveCurrentMonth } from "./store.js";
@@ -105,6 +106,8 @@ async function createMonthInDB(members, key, groupId, allMonths) {
 }
 
 export default function App() {
+  const [licensed, setLicensed] = useState(() => !!localStorage.getItem("bachat_license"));
+  if (!licensed) return <LicenseScreen onSuccess={() => setLicensed(true)} />;
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
   const [selectedGroup, setSelectedGroup] = useState(() => { try { return JSON.parse(sessionStorage.getItem("sssb_group") || "null"); } catch { return null; } });
   const [loading, setLoading] = useState(false);
