@@ -78,6 +78,17 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
                   <div>
                     <div className="marathi font-bold" style={{ fontSize: 15 }}>{member.name}</div>
                     {member.phone && <div style={{ fontSize: 12, color: "var(--text3)" }}>📞 {member.phone}</div>}
+                    {member.phone && !entry.paid && (
+                      <div
+                        onClick={() => {
+                          const msg = "नमस्कार " + member.name + " जी,\nश्री शीतला देवी पुरुष बचत गट बारड\n" + monthLabel(monthKey) + " ची रक्कम ₹" + (entry.totalDue || 0).toLocaleString("en-IN") + " भरणे बाकी आहे.\nकृपया लवकर भरावे. 🙏\n- सुनील घंटेवार (सचिव)";
+                          window.open("https://wa.me/91" + member.phone + "?text=" + encodeURIComponent(msg));
+                        }}
+                        style={{ display:"inline-flex", alignItems:"center", gap:4, marginTop:4, background:"#25D366", color:"#fff", borderRadius:8, padding:"4px 10px", fontSize:11, cursor:"pointer", fontWeight:600 }}
+                      >
+                        <span>📲</span><span className="marathi"> WhatsApp reminder</span>
+                      </div>
+                    )}
                   </div>
                   <span className={"badge " + (isPaid ? "badge-green" : "badge-red")}><span className="marathi">{isPaid ? "✓ भरले" : "बाकी"}</span></span>
                 </div>
