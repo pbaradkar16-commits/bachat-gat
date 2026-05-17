@@ -88,7 +88,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
         <div className="marathi font-bold" style={{fontSize:15,marginBottom:12,color:"#1A7F4B"}}>📊 Cash in Hand — हिशोब</div>
         <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:13}}>
           <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
-            <span className="marathi" style={{color:"var(--text2)"}}>माजील शिलमक</span>
+            <span className="marathi" style={{color:"var(--text2)"}}>मागील शिल्लक</span>
             <span style={{fontWeight:700,color:"#1A7F4B"}}>+ {formatRs(openingBalance)}</span>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #F0EDE8"}}>
