@@ -15,7 +15,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
   const currentMonthPrincipal = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.principal || 0), 0) : 0;
   const currentMonthInterest = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0) : 0;
   const totalCustomExtra = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid && e.customAmount > e.totalDue).reduce((s, e) => s + (e.customAmount - e.totalDue), 0) : 0;
-  const cashInHand = openingBalance + currentMonthSaving + currentMonthPrincipal + currentMonthInterest + totalCustomExtra;
+  const cashInHand = openingBalance + currentMonthSaving + currentMonthPrincipal + currentMonthInterest;
   const cards = [
     { label: "चालू महिना संकलन", value: formatRs(stats.totalCollection), icon: "💰", color: "var(--green)", bg: "var(--green-light)", sub: `${stats.paidCount} / ${stats.totalMembers} सदस्य` },
     { label: "व्याज मिळाले", value: formatRs(stats.totalInterest), icon: "📈", color: "var(--blue)", bg: "var(--blue-light)", sub: "चालू महिना" },
