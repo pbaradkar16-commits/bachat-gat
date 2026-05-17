@@ -30,7 +30,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
     const [y,m] = currentMonth.split("-");
     const monthName = `${M[parseInt(m)-1]} ${y}`;
     const pending = monthRecord ? Object.entries(monthRecord.entries).filter(([,e]) => !e.paid).map(([id]) => members.find(mb => mb.id === id)?.name).filter(Boolean) : [];
-    const msg = `🪔 *श्री स्वामी समर्थ बचत गट - बारड*\n\n📅 *${monthName} अहवाल*\n\n💰 एकूण संकलन: ${formatRs(stats.totalCollection)}\n📈 व्याज: ${formatRs(stats.totalInterest)}\n🏦 बचत: ${formatRs(stats.totalSaving)}\n✅ भरले: ${stats.paidCount} सदस्य\n⏳ बाकी: ${stats.pendingCount} सदस्य${pending.length > 0 ? `\n\n*थकबाकी सदस्य:*\n${pending.map((n,i) => `${i+1}. ${n}`).join('\n')}` : ''}\n\n_app.netlify.app/bachat-gat_`;
+    const msg = `🪔 *श्री शीतला देवी पुरुष बचत गट बारड*\n\n📅 *${monthName} अहवाल*\n\n💰 एकूण संकलन: ${formatRs(stats.totalCollection)}\n📈 व्याज: ${formatRs(stats.totalInterest)}\n🏦 बचत: ${formatRs(stats.totalSaving)}\n✅ भरले: ${stats.paidCount} सदस्य\n⏳ बाकी: ${stats.pendingCount} सदस्य${pending.length > 0 ? `\n\n*थकबाकी सदस्य:*\n${pending.map((n,i) => `${i+1}. ${n}`).join('\n')}` : ''}\n\n_pbaradkar16-commits.github.io/bachat-gat_`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
   }
   return (
