@@ -6,7 +6,12 @@ import './index.css'
 
 function Root() {
   const [licensed, setLicensed] = useState(false);
-  if (!licensed) return <LicenseScreen onSuccess={() => setLicensed(true)} />;
+
+  if (!licensed) return <LicenseScreen onSuccess={() => {
+    sessionStorage.clear();
+    setLicensed(true);
+  }} />;
+
   return <App />;
 }
 
