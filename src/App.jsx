@@ -110,7 +110,7 @@ export default function App() {
 
 
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
-  const [selectedGroup, setSelectedGroup] = useState(() => { try { return JSON.parse(sessionStorage.getItem("sssb_group") || "null"); } catch { return null; } });
+  const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [members, setMembers] = useState([]);
@@ -231,7 +231,7 @@ export default function App() {
   }, []);
 
   if (!unlocked) return <PinScreen onSuccess={() => { setUnlocked(true); sessionStorage.setItem("sssb_unlocked","true"); }} />;
-  if (!selectedGroup) return <GroupSelect onSelect={(g) => { setSelectedGroup(g); sessionStorage.setItem("sssb_group", JSON.stringify(g)); }} />;
+  if (!selectedGroup) return <GroupSelect onSelect={(g) => { setSelectedGroup(g);  }} />;
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
