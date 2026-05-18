@@ -82,7 +82,7 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
                       <div
                         onClick={() => {
                           const msg = "नमस्कार " + member.name + " जी,\n" + (group?.name || "बचत गट") + "\n" + monthLabel(monthKey) + " ची रक्कम ₹" + (entry.totalDue || 0).toLocaleString("en-IN") + " भरणे बाकी आहे.\nकृपया लवकर भरावे. 🙏\n- सचिव";
-                          window.open("https://wa.me/91" + member.phone + "?text=" + encodeURIComponent(msg));
+                          window.location.href = "https://wa.me/91" + member.phone + "?text=" + encodeURIComponent(msg);
                         }}
                         style={{ display:"inline-flex", alignItems:"center", gap:4, marginTop:4, background:"#25D366", color:"#fff", borderRadius:8, padding:"4px 10px", fontSize:11, cursor:"pointer", fontWeight:600 }}
                       >
