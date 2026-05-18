@@ -7,8 +7,8 @@ export default function GroupSelect({ onSelect }) {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newAddress, setNewAddress] = useState("");
+  const [meetingDay, setMeetingDay] = useState("");
   const [saving, setSaving] = useState(false);
-  const [meetingDay, setMeetingDay] = useState(10);
 
   useEffect(() => { loadGroups(); }, []);
 
@@ -21,9 +21,10 @@ export default function GroupSelect({ onSelect }) {
 
   async function handleCreateGroup() {
     if (!newName.trim()) { alert("गट नाव भरा!"); return; }
+    if (!meetingDay || meetingDay < 1 || meetingDay > 31) { alert("बैठकीचा दिवस भरा! (1-31)"); return; }
     setSaving(true);
-    const { data } = await supabase.from('groups').insert({ name: newName.trim(), address: newAddress.trim(), meeting_day: meetingDay }).select().single();
-    if (data) { setGroups(prev => [...prev, data]); setShowNew(false); setNewName(""); setNewAddress(""); onSelect(data); }
+    const { data } = await supabase.from('groups').insert({ name: newName.trim(), address: newAddress.trim(), meeting_day: Number(meetingDay) }).select().single();
+    if (data) { setGroups(prev => [...prev, data]); setShowNew(false); setNewName(""); setNewAddress(""); setMeetingDay(""); onSelect(data); }
     setSaving(false);
   }
 
@@ -45,6 +46,7 @@ export default function GroupSelect({ onSelect }) {
             <div>
               <div className="marathi font-bold" style={{ fontSize:15 }}>{g.name}</div>
               {g.address && <div className="marathi" style={{ fontSize:12, color:"var(--text3)", marginTop:2 }}>{g.address}</div>}
+              {g.meeting_day && <div className="marathi" style={{ fontSize:11, color:"var(--saffron)", marginTop:2 }}>📅 बैठक: दर महिन्याच्या {g.meeting_day} तारखेला</div>}
             </div>
             <div style={{ fontSize:24 }}>▶</div>
           </div>
@@ -60,9 +62,14 @@ export default function GroupSelect({ onSelect }) {
               <label className="marathi" style={{ fontSize:13 }}>गटाचे नाव *</label>
               <input className="input marathi" value={newName} onChange={e=>setNewName(e.target.value)} placeholder="उदा. श्री गणेश बचत गट"/>
             </div>
-            <div style={{ marginBottom:16 }}>
+            <div style={{ marginBottom:12 }}>
               <label className="marathi" style={{ fontSize:13 }}>पत्ता</label>
               <input className="input marathi" value={newAddress} onChange={e=>setNewAddress(e.target.value)} placeholder="उदा. तालुका मुदखेड"/>
+            </div>
+            <div style={{ marginBottom:16 }}>
+              <label className="marathi" style={{ fontSize:13 }}>📅 बैठकीची तारीख (महिन्याचा दिवस) *</label>
+              <input className="input" type="number" min="1" max="31" value={meetingDay} onChange={e=>setMeetingDay(e.target.value)} placeholder="उदा. 2"/>
+              <div className="marathi" style={{ fontSize:11, color:"var(--text3)", marginTop:4 }}>म्हणजे दर महिन्याच्या {meetingDay || "?"} तारखेला बैठक होते</div>
             </div>
             <div style={{ display:"flex", gap:10 }}>
               <button className="btn btn-saffron" style={{ flex:1 }} onClick={handleCreateGroup} disabled={saving}><span className="marathi">{saving?"जतन होत आहे...":"✓ बनवा"}</span></button>
