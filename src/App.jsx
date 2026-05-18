@@ -120,6 +120,8 @@ export default function App() {
 
   useEffect(() => {
     if (!unlocked) return;
+    setMembers([]);
+    setMonths({});
     async function init() {
       setLoading(true);
       try {
