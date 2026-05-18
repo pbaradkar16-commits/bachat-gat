@@ -106,8 +106,8 @@ async function createMonthInDB(members, key, groupId, allMonths) {
 }
 
 export default function App() {
-  const [licensed, setLicensed] = useState(() => !!localStorage.getItem("bachat_license"));
-  if (!licensed) return <LicenseScreen onSuccess={() => setLicensed(true)} />;
+  const [licensed, setLicensed] = useState(false);
+  if (!licensed) return <LicenseScreen onSuccess={(row) => { setLicensed(true); }} />;
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
   const [selectedGroup, setSelectedGroup] = useState(() => { try { return JSON.parse(sessionStorage.getItem("sssb_group") || "null"); } catch { return null; } });
   const [loading, setLoading] = useState(false);
