@@ -18,7 +18,6 @@ function PinScreen({ onSuccess }) {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const savedPin = localStorage.getItem("sssb_pin");
-  if (!licensed) return <LicenseScreen onSuccess={(row) => { setLicensed(true); }} />;
 
   useEffect(() => { if (!savedPin) setMode("setup"); }, []);
   function handleLogin() { if (pin === savedPin) { onSuccess(); } else { setError("चुकीचा PIN!"); setPin(""); } }
@@ -108,7 +107,7 @@ async function createMonthInDB(members, key, groupId, allMonths) {
 }
 
 export default function App() {
-  const [licensed, setLicensed] = useState(false);
+
 
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
   const [selectedGroup, setSelectedGroup] = useState(() => { try { return JSON.parse(sessionStorage.getItem("sssb_group") || "null"); } catch { return null; } });
@@ -118,7 +117,6 @@ export default function App() {
   const [months, setMonths] = useState({});
   const [currentMonth, setCurrentMonthState] = useState(todayMonthKey());
 
-  if (!licensed) return <LicenseScreen onSuccess={(row) => { setLicensed(true); }} />;
 
   useEffect(() => {
     if (!unlocked) return;
