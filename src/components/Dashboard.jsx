@@ -11,9 +11,9 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
   const totalInterestAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0), 0);
   const openingBalance = Number(localStorage.getItem('sssb_opening_balance') || 0);
   const currentMonthRecord = months[currentMonth];
-  const currentMonthSaving = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.saving || 0), 0) : 0;
-  const currentMonthPrincipal = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.principal || 0), 0) : 0;
-  const currentMonthInterest = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0) : 0;
+  const currentMonthSaving = 0;
+  const currentMonthPrincipal = 0;
+  const currentMonthInterest = 0;
   const totalCustomExtra = currentMonthRecord ? Object.values(currentMonthRecord.entries).filter(e => e.paid && e.customAmount > e.totalDue).reduce((s, e) => s + (e.customAmount - e.totalDue), 0) : 0;
   const cashInHand = openingBalance + currentMonthSaving + currentMonthPrincipal + currentMonthInterest;
   const cards = [
