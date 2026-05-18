@@ -142,6 +142,23 @@ export default function Reports({ members, months, currentMonth, onUpdateMembers
     doc.setTextColor(26, 127, 75);
     doc.text(formatRs(stats.totalCollection), 152, y+5.5, { align: "right" });
 
+    // Cash in Hand
+    const openingBal = Number(localStorage.getItem('sssb_opening_balance') || 0);
+    if (openingBal > 0) {
+      doc.setFillColor(232, 245, 233);
+      doc.rect(10, y+10, 190, 25, "F");
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(26, 127, 75);
+      doc.text("Cash in Hand", 15, y+20);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(0,0,0);
+      doc.text("Opening: " + formatRs(openingBal), 15, y+28);
+      doc.text("Collection: " + formatRs(stats.totalCollection), 80, y+28);
+      doc.setFont("helvetica", "bold");
+      doc.text("Net: " + formatRs(openingBal + stats.totalCollection), 170, y+28, {align:"right"});
+    }
     // Footer
     doc.setTextColor(150, 150, 150);
     doc.setFontSize(8);
