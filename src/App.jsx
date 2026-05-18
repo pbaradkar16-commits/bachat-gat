@@ -137,7 +137,7 @@ export default function App() {
       setLoading(false);
     }
     init();
-  }, [unlocked]);
+  }, [unlocked, selectedGroup]);
 
   function setCurrentMonth(key) { setCurrentMonthState(key); saveCurrentMonth(key); }
 
