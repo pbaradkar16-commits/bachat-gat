@@ -1,6 +1,6 @@
 export const SAVING_AMOUNT = 1000;
 export const GROUP_START_YEAR = 2022;
-export const GROUP_START_MONTH = 11;
+export const GROUP_START_MONTH = 10;
 export function getMonthNumber(key) {
   const [y, m] = key.split("-").map(Number);
   return (y - GROUP_START_YEAR) * 12 + (m - GROUP_START_MONTH) + 1;
