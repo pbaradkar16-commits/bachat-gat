@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { monthLabel, nextMonthKey, prevMonthKey, formatRs, SAVING_AMOUNT, getMonthStats, calcEMI } from "../store.js";
 import { toast } from "./Toast.jsx";
-export default function MonthlyView({ members, months, currentMonth, setCurrentMonth, onMarkPaid, onUndoPaid, onCreateNextMonth }) {
+export default function MonthlyView({ members, months, currentMonth, setCurrentMonth, onMarkPaid, onUndoPaid, onCreateNextMonth, group }) {
   const [confirmId, setConfirmId] = useState(null);
   const [undoId, setUndoId] = useState(null);
   const [filterPaid, setFilterPaid] = useState("all");
@@ -81,7 +81,7 @@ export default function MonthlyView({ members, months, currentMonth, setCurrentM
                     {member.phone && !entry.paid && (
                       <div
                         onClick={() => {
-                          const msg = "नमस्कार " + member.name + " जी,\nश्री शीतला देवी पुरुष बचत गट बारड\n" + monthLabel(monthKey) + " ची रक्कम ₹" + (entry.totalDue || 0).toLocaleString("en-IN") + " भरणे बाकी आहे.\nकृपया लवकर भरावे. 🙏\n- सुनील घंटेवार (सचिव)";
+                          const msg = "नमस्कार " + member.name + " जी,\n" + (group?.name || "बचत गट") + "\n" + monthLabel(monthKey) + " ची रक्कम ₹" + (entry.totalDue || 0).toLocaleString("en-IN") + " भरणे बाकी आहे.\nकृपया लवकर भरावे. 🙏\n- सचिव";
                           window.open("https://wa.me/91" + member.phone + "?text=" + encodeURIComponent(msg));
                         }}
                         style={{ display:"inline-flex", alignItems:"center", gap:4, marginTop:4, background:"#25D366", color:"#fff", borderRadius:8, padding:"4px 10px", fontSize:11, cursor:"pointer", fontWeight:600 }}

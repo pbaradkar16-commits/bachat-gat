@@ -246,7 +246,7 @@ export default function App() {
       <Header activeTab={activeTab} setActiveTab={setActiveTab} onLock={() => { setUnlocked(false); sessionStorage.removeItem("sssb_unlocked"); }} group={selectedGroup} />
       <main>
         {activeTab==="dashboard" && <Dashboard members={members} months={months} currentMonth={currentMonth} setActiveTab={setActiveTab}/>}
-        {activeTab==="monthly" && <MonthlyView members={members} months={months} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} onMarkPaid={handleMarkPaid} onUndoPaid={handleUndoPaid} onCreateNextMonth={handleCreateNextMonth}/>}
+        {activeTab==="monthly" && <MonthlyView members={members} months={months} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} onMarkPaid={handleMarkPaid} onUndoPaid={handleUndoPaid} onCreateNextMonth={handleCreateNextMonth} group={selectedGroup}/>}
         {activeTab==="members" && <Members members={members} months={months} onSave={handleSaveMember} onDelete={handleDeleteMember}/>}
         {activeTab==="reports" && <Reports members={members} months={months} currentMonth={currentMonth} onUpdateMembers={setMembers} onUpdateMonths={setMonths}/>}
       </main>
