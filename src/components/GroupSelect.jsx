@@ -8,6 +8,7 @@ export default function GroupSelect({ onSelect }) {
   const [newName, setNewName] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [meetingDay, setMeetingDay] = useState("");
+  const [interestRate, setInterestRate] = useState("1.5");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadGroups(); }, []);
@@ -23,8 +24,8 @@ export default function GroupSelect({ onSelect }) {
     if (!newName.trim()) { alert("गट नाव भरा!"); return; }
     if (!meetingDay || meetingDay < 1 || meetingDay > 31) { alert("बैठकीचा दिवस भरा! (1-31)"); return; }
     setSaving(true);
-    const { data } = await supabase.from('groups').insert({ name: newName.trim(), address: newAddress.trim(), meeting_day: Number(meetingDay) }).select().single();
-    if (data) { setGroups(prev => [...prev, data]); setShowNew(false); setNewName(""); setNewAddress(""); setMeetingDay(""); onSelect(data); }
+    const { data } = await supabase.from('groups').insert({ name: newName.trim(), address: newAddress.trim(), meeting_day: Number(meetingDay), interest_rate: Number(interestRate) }).select().single();
+    if (data) { setGroups(prev => [...prev, data]); setShowNew(false); setNewName(""); setNewAddress(""); setMeetingDay(""); setInterestRate("1.5"); onSelect(data); }
     setSaving(false);
   }
 
@@ -65,6 +66,11 @@ export default function GroupSelect({ onSelect }) {
             <div style={{ marginBottom:12 }}>
               <label className="marathi" style={{ fontSize:13 }}>पत्ता</label>
               <input className="input marathi" value={newAddress} onChange={e=>setNewAddress(e.target.value)} placeholder="उदा. तालुका मुदखेड"/>
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label className="marathi" style={{ fontSize:13 }}>💰 व्याज दर (% प्रति महिना) *</label>
+              <input className="input" type="number" step="0.1" min="0" max="10" value={interestRate} onChange={e=>setInterestRate(e.target.value)} placeholder="उदा. 1.5"/>
+              <div className="marathi" style={{ fontSize:11, color:"var(--text3)", marginTop:4 }}>दर महिन्याला {interestRate || "?"}% व्याज लागेल</div>
             </div>
             <div style={{ marginBottom:16 }}>
               <label className="marathi" style={{ fontSize:13 }}>📅 बैठकीची तारीख (महिन्याचा दिवस) *</label>
