@@ -1,5 +1,5 @@
 import { formatRs, monthLabel, getMonthStats, SAVING_AMOUNT } from "../store.js";
-export default function Dashboard({ members, months, currentMonth, setActiveTab }) {
+export default function Dashboard({ group, members, months, currentMonth, setActiveTab }) {
   const monthRecord = months[currentMonth];
   const stats = getMonthStats(monthRecord, members);
   const totalOutstanding = members.reduce((s, m) => s + (m.balance || 0), 0);
@@ -9,7 +9,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
   const totalPrincipalRecovered = members.reduce((s, m) => s + ((m.loanAmount || 0) - (m.balance || 0)), 0);
   const totalSavingsAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.saving || 0), 0), 0);
   const totalInterestAllTime = Object.values(months).reduce((sum, mr) => sum + Object.values(mr.entries).filter(e => e.paid).reduce((s, e) => s + (e.interest || 0), 0), 0);
-  const openingBalance = Number(localStorage.getItem('sssb_opening_balance') || 0);
+  const openingBalance = Number(localStorage.getItem('opening_balance_' + (group?.id || 'default')) || 0);
   const currentMonthRecord = months[currentMonth];
   const currentMonthSaving = 0;
   const currentMonthPrincipal = 0;
@@ -30,7 +30,7 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
     const [y,m] = currentMonth.split("-");
     const monthName = `${M[parseInt(m)-1]} ${y}`;
     const pending = monthRecord ? Object.entries(monthRecord.entries).filter(([,e]) => !e.paid).map(([id]) => members.find(mb => mb.id === id)?.name).filter(Boolean) : [];
-    const msg = `🪔 *श्री शीतला देवी पुरुष बचत गट बारड*\n\n📅 *${monthName} अहवाल*\n\n💰 एकूण संकलन: ${formatRs(stats.totalCollection)}\n📈 व्याज: ${formatRs(stats.totalInterest)}\n🏦 बचत: ${formatRs(stats.totalSaving)}\n✅ भरले: ${stats.paidCount} सदस्य\n⏳ बाकी: ${stats.pendingCount} सदस्य${pending.length > 0 ? `\n\n*थकबाकी सदस्य:*\n${pending.map((n,i) => `${i+1}. ${n}`).join('\n')}` : ''}\n\n_pbaradkar16-commits.github.io/bachat-gat_`;
+    const msg = `🪔 *${group?.name || "बचत गट"}*\n\n📅 *${monthName} अहवाल*\n\n💰 एकूण संकलन: ${formatRs(stats.totalCollection)}\n📈 व्याज: ${formatRs(stats.totalInterest)}\n🏦 बचत: ${formatRs(stats.totalSaving)}\n✅ भरले: ${stats.paidCount} सदस्य\n⏳ बाकी: ${stats.pendingCount} सदस्य${pending.length > 0 ? `\n\n*थकबाकी सदस्य:*\n${pending.map((n,i) => `${i+1}. ${n}`).join('\n')}` : ''}\n\n_pbaradkar16-commits.github.io/bachat-gat_`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
   }
   return (
@@ -72,13 +72,13 @@ export default function Dashboard({ members, months, currentMonth, setActiveTab 
         <div className="marathi font-bold" style={{marginBottom:8}}>💰 उघडणारी रक्कम (Opening Balance)</div>
         <div style={{display:"flex",gap:8}}>
           <input className="input" type="number" 
-            defaultValue={localStorage.getItem('sssb_opening_balance')||''} 
+            defaultValue={localStorage.getItem('opening_balance_' + (group?.id || 'default'))||''} 
             placeholder="₹45,771"
             id="opening_bal_input"
             style={{flex:1}}/>
           <button className="btn btn-green" onClick={()=>{
             const val = document.getElementById('opening_bal_input').value;
-            localStorage.setItem('sssb_opening_balance', val);
+            localStorage.setItem('opening_balance_' + (group?.id || 'default'), val);
             window.location.reload();
           }}><span className="marathi">जतन</span></button>
         </div>
