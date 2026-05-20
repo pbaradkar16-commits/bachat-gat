@@ -231,7 +231,7 @@ export default function App() {
   }, []);
 
   if (!unlocked) return <PinScreen onSuccess={() => { setUnlocked(true); sessionStorage.setItem("sssb_unlocked","true"); }} />;
-  if (!selectedGroup) return <GroupSelect onSelect={(g) => { setSelectedGroup(g);  }} />;
+  if (!selectedGroup) return <GroupSelect onSelect={async (g) => { await supabase.rpc("set_config", {setting: "app.current_group_id", value: g.id, is_local: false}); setSelectedGroup(g); }} />;
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
