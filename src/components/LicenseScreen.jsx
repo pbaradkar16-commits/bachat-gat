@@ -1,28 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
-// SCREENS: phone | setPassword | login | forgot | resetPassword
+// SCREENS: key | setPassword | login | selectGroup | forgot | resetPassword
 export default function LicenseScreen({ onSuccess }) {
-  const [screen, setScreen] = useState("phone");
-  const [phone, setPhone] = useState("");
+  const [screen, setScreen] = useState("key");
+  const [licenseKey, setLicenseKey] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [licenseRow, setLicenseRow] = useState(null);
+  const [groups, setGroups] = useState([]);
 
-  async function handlePhoneSubmit() {
+  // Check if already logged in
+  useEffect(() => {
+    const saved = localStorage.getItem("bm_session");
+    if (saved) {
+      const session = JSON.parse(saved);
+      if (session.groups && session.groups.length === 1) {
+        onSuccess(session.groups[0]);
+      } else if (session.groups && session.groups.length > 1) {
+        setGroups(session.groups);
+        setScreen("selectGroup");
+      }
+    }
+  }, []);
+
+  async function handleKeySubmit() {
     setError("");
-    if (phone.length < 10) { setError("कृपया 10 अंकी मोबाईल नंबर टाका"); return; }
+    if (!licenseKey.trim()) { setError("License key टाका"); return; }
     setLoading(true);
     const { data, error: err } = await supabase
       .from("licenses")
-      .select("*")
-      .eq("phone", phone.trim())
+      .select("*, groups(*)")
+      .eq("license_key", licenseKey.trim().toUpperCase())
+      .eq("status", "active")
       .single();
     setLoading(false);
     if (err || !data) {
-      setError("हा नंबर registered नाही. पवन भिमेवार यांच्याशी संपर्क करा.\n📞 8007006310");
+      setError("चुकीची license key! पवन भिमेवार यांच्याशी संपर्क करा.\n📞 8007006310");
       return;
     }
     setLicenseRow(data);
@@ -41,36 +57,33 @@ export default function LicenseScreen({ onSuccess }) {
     const { error: err } = await supabase
       .from("licenses")
       .update({ password: password })
-      .eq("phone", phone.trim());
+      .eq("license_key", licenseKey.trim().toUpperCase());
     setLoading(false);
     if (err) { setError("Error! पुन्हा प्रयत्न करा"); return; }
-    onSuccess(licenseRow);
+    saveAndProceed(licenseRow);
   }
 
   async function handleLogin() {
     setError("");
     if (!password) { setError("Password टाका"); return; }
     if (password === licenseRow.password) {
-      onSuccess(licenseRow);
+      saveAndProceed(licenseRow);
     } else {
       setError("चुकीचा password! पुन्हा प्रयत्न करा");
     }
   }
 
-  async function handleForgotPhone() {
+  async function handleForgotKey() {
     setError("");
-    if (phone.length < 10) { setError("कृपया 10 अंकी मोबाईल नंबर टाका"); return; }
+    if (!licenseKey.trim()) { setError("License key टाका"); return; }
     setLoading(true);
     const { data, error: err } = await supabase
       .from("licenses")
       .select("*")
-      .eq("phone", phone.trim())
+      .eq("license_key", licenseKey.trim().toUpperCase())
       .single();
     setLoading(false);
-    if (err || !data) {
-      setError("हा नंबर registered नाही.");
-      return;
-    }
+    if (err || !data) { setError("चुकीची license key!"); return; }
     setLicenseRow(data);
     setScreen("resetPassword");
   }
@@ -83,10 +96,29 @@ export default function LicenseScreen({ onSuccess }) {
     const { error: err } = await supabase
       .from("licenses")
       .update({ password: password })
-      .eq("phone", phone.trim());
+      .eq("license_key", licenseKey.trim().toUpperCase());
     setLoading(false);
     if (err) { setError("Error! पुन्हा प्रयत्न करा"); return; }
-    onSuccess(licenseRow);
+    saveAndProceed(licenseRow);
+  }
+
+  function saveAndProceed(license) {
+    const groupData = license.groups;
+    const session = { groups: [groupData], licenseKey: license.license_key };
+    localStorage.setItem("bm_session", JSON.stringify(session));
+    onSuccess(groupData);
+  }
+
+  function handleGroupSelect(group) {
+    onSuccess(group);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("bm_session");
+    setScreen("key");
+    setLicenseKey("");
+    setPassword("");
+    setGroups([]);
   }
 
   const bg = { minHeight:"100vh", background:"linear-gradient(135deg, #E8650A, #A03A06)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20 };
@@ -100,37 +132,35 @@ export default function LicenseScreen({ onSuccess }) {
 
       <div style={card}>
 
-        {/* SCREEN 1: Enter Phone */}
-        {screen === "phone" && <>
-          <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:8 }}>📱 मोबाईल नंबर टाका</div>
-          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>तुमचा registered नंबर टाका</div>
-          <input className="input" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="9876543210" style={{ textAlign:"center", fontSize:18, marginBottom:12 }} maxLength={10} />
+        {screen === "key" && <>
+          <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:8 }}>🔑 License Key टाका</div>
+          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>पवन भिमेवार यांनी दिलेली key टाका</div>
+          <input className="input" value={licenseKey} onChange={e=>setLicenseKey(e.target.value.toUpperCase())} placeholder="उदा. SWAMI-2024" style={{ textAlign:"center", fontSize:18, marginBottom:12, letterSpacing:2 }} />
           {error && <div className="marathi" style={{ color:"var(--red)", fontSize:13, marginBottom:12, textAlign:"center", whiteSpace:"pre-line" }}>{error}</div>}
-          <button className="btn btn-saffron btn-full" onClick={handlePhoneSubmit} disabled={loading || phone.length < 10} style={{ opacity:phone.length>=10?1:0.5 }}>
+          <button className="btn btn-saffron btn-full" onClick={handleKeySubmit} disabled={loading || !licenseKey.trim()}>
             <span className="marathi">{loading ? "तपासत आहे..." : "✅ पुढे जा"}</span>
           </button>
         </>}
 
-        {/* SCREEN 2: Set Password (first time) */}
         {screen === "setPassword" && <>
           <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:8 }}>🔐 नवीन Password सेट करा</div>
-          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>पहिल्यांदा login करताना password तयार करा</div>
-          <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="नवीन Password" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
-          <input className="input" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Password पुन्हा टाका" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
+          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:4 }}>स्वागत आहे!</div>
+          <div className="marathi font-bold text-center" style={{ fontSize:14, color:"var(--saffron)", marginBottom:20 }}>{licenseRow?.groups?.name}</div>
+          <input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="नवीन Password" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
+          <input className="input" type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Password पुन्हा टाका" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
           {error && <div className="marathi" style={{ color:"var(--red)", fontSize:13, marginBottom:12, textAlign:"center" }}>{error}</div>}
-          <button className="btn btn-saffron btn-full" onClick={handleSetPassword} disabled={loading} style={{ opacity:1 }}>
+          <button className="btn btn-saffron btn-full" onClick={handleSetPassword} disabled={loading}>
             <span className="marathi">{loading ? "सेव्ह होत आहे..." : "✅ Password सेव्ह करा"}</span>
           </button>
-          <button onClick={() => { setScreen("phone"); setError(""); }} style={{ marginTop:12, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
+          <button onClick={() => { setScreen("key"); setError(""); }} style={{ marginTop:12, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
             <span className="marathi">← मागे जा</span>
           </button>
         </>}
 
-        {/* SCREEN 3: Login with password */}
         {screen === "login" && <>
           <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:8 }}>🔑 Password टाका</div>
-          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>📱 {phone}</div>
-          <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
+          <div className="marathi font-bold text-center" style={{ fontSize:14, color:"var(--saffron)", marginBottom:20 }}>{licenseRow?.groups?.name}</div>
+          <input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
           {error && <div className="marathi" style={{ color:"var(--red)", fontSize:13, marginBottom:12, textAlign:"center" }}>{error}</div>}
           <button className="btn btn-saffron btn-full" onClick={handleLogin} disabled={loading}>
             <span className="marathi">{loading ? "..." : "✅ Login करा"}</span>
@@ -138,34 +168,44 @@ export default function LicenseScreen({ onSuccess }) {
           <button onClick={() => { setScreen("forgot"); setError(""); setPassword(""); }} style={{ marginTop:12, background:"none", border:"none", color:"#E8650A", fontSize:13, width:"100%", cursor:"pointer" }}>
             <span className="marathi">🔁 Password विसरलात?</span>
           </button>
-          <button onClick={() => { setScreen("phone"); setError(""); setPassword(""); }} style={{ marginTop:8, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
+          <button onClick={() => { setScreen("key"); setError(""); setPassword(""); }} style={{ marginTop:8, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
             <span className="marathi">← मागे जा</span>
           </button>
         </>}
 
-        {/* SCREEN 4: Forgot Password - enter phone */}
         {screen === "forgot" && <>
           <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:8 }}>🔁 Password Reset करा</div>
-          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>तुमचा registered नंबर टाका</div>
-          <input className="input" type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="9876543210" style={{ textAlign:"center", fontSize:18, marginBottom:12 }} maxLength={10} />
+          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>तुमची License Key टाका</div>
+          <input className="input" value={licenseKey} onChange={e=>setLicenseKey(e.target.value.toUpperCase())} placeholder="उदा. SWAMI-2024" style={{ textAlign:"center", fontSize:18, marginBottom:12, letterSpacing:2 }} />
           {error && <div className="marathi" style={{ color:"var(--red)", fontSize:13, marginBottom:12, textAlign:"center" }}>{error}</div>}
-          <button className="btn btn-saffron btn-full" onClick={handleForgotPhone} disabled={loading || phone.length < 10} style={{ opacity:phone.length>=10?1:0.5 }}>
+          <button className="btn btn-saffron btn-full" onClick={handleForgotKey} disabled={loading || !licenseKey.trim()}>
             <span className="marathi">{loading ? "तपासत आहे..." : "✅ पुढे जा"}</span>
           </button>
-          <button onClick={() => { setScreen("phone"); setError(""); }} style={{ marginTop:12, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
+          <button onClick={() => { setScreen("key"); setError(""); }} style={{ marginTop:12, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
             <span className="marathi">← मागे जा</span>
           </button>
         </>}
 
-        {/* SCREEN 5: Reset Password */}
         {screen === "resetPassword" && <>
           <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:8 }}>🔐 नवीन Password टाका</div>
-          <div className="marathi text-center" style={{ fontSize:12, color:"var(--text3)", marginBottom:20 }}>📱 {phone}</div>
-          <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="नवीन Password" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
-          <input className="input" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Password पुन्हा टाका" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
+          <input className="input" type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="नवीन Password" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
+          <input className="input" type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Password पुन्हा टाका" style={{ textAlign:"center", fontSize:16, marginBottom:12 }} />
           {error && <div className="marathi" style={{ color:"var(--red)", fontSize:13, marginBottom:12, textAlign:"center" }}>{error}</div>}
           <button className="btn btn-saffron btn-full" onClick={handleResetPassword} disabled={loading}>
             <span className="marathi">{loading ? "सेव्ह होत आहे..." : "✅ Password Reset करा"}</span>
+          </button>
+        </>}
+
+        {screen === "selectGroup" && <>
+          <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:16 }}>📋 गट निवडा</div>
+          {groups.map(g => (
+            <div key={g.id} onClick={() => handleGroupSelect(g)} style={{ background:"var(--saffron-light)", borderRadius:12, padding:14, marginBottom:10, cursor:"pointer", border:"2px solid var(--saffron)" }}>
+              <div className="marathi font-bold" style={{ fontSize:14 }}>{g.name}</div>
+              {g.address && <div className="marathi" style={{ fontSize:11, color:"var(--text3)", marginTop:2 }}>{g.address}</div>}
+            </div>
+          ))}
+          <button onClick={handleLogout} style={{ marginTop:12, background:"none", border:"none", color:"var(--text3)", fontSize:12, width:"100%", cursor:"pointer" }}>
+            <span className="marathi">🚪 Logout</span>
           </button>
         </>}
 
