@@ -230,8 +230,7 @@ export default function App() {
     toast("सदस्य काढला", "info");
   }, []);
 
-  if (!unlocked) return <PinScreen onSuccess={() => { setUnlocked(true); sessionStorage.setItem("sssb_unlocked","true"); }} />;
-  if (!selectedGroup) return <GroupSelect onSelect={async (g) => { await supabase.rpc("set_config", {setting: "app.current_group_id", value: g.id, is_local: false}); setSelectedGroup(g); }} />;
+  if (!selectedGroup) return <LicenseScreen onSuccess={async (g) => { await supabase.rpc("set_config", {setting: "app.current_group_id", value: g.id, is_local: false}); setSelectedGroup(g); setUnlocked(true); }} />;
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
