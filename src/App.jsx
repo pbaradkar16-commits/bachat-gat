@@ -110,6 +110,7 @@ export default function App() {
 
 
   const [unlocked, setUnlocked] = useState(sessionStorage.getItem("sssb_unlocked") === "true");
+  const [licensed, setLicensed] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -230,7 +231,9 @@ export default function App() {
     toast("सदस्य काढला", "info");
   }, []);
 
-  if (!selectedGroup) return <LicenseScreen onSuccess={async (g) => { await supabase.rpc("set_config", {setting: "app.current_group_id", value: g.id, is_local: false}); setSelectedGroup(g); setUnlocked(true); }} />;
+  if (!licensed) return <LicenseScreen onSuccess={() => setLicensed(true)} />;
+
+  if (!selectedGroup) return <GroupSelect onSelect={async (g) => { await supabase.rpc("set_config", {setting: "app.current_group_id", value: g.id, is_local: false}); setSelectedGroup(g); setUnlocked(true); }} />;
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
