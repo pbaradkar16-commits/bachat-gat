@@ -94,7 +94,7 @@ async function createMonthInDB(members, key, groupId, allMonths) {
       const prevEntry = prevMonth.entries[m.id];
       openingBalance = prevEntry.paid ? prevEntry.balanceAfter : prevEntry.balanceBefore;
     }
-    const principal = calcEMI(m.loanAmount);
+    const principal = Math.min(Number(m.emi)||0, openingBalance>0?openingBalance:0);
     const interest = calcInterest(openingBalance);
     return { month_id: monthData.id, member_id: m.id, saving: SAVING_AMOUNT, principal, interest, total_due: SAVING_AMOUNT+principal+interest, paid: false, balance_before: openingBalance, balance_after: openingBalance>0?Math.max(0,openingBalance-principal):0 };
   });
@@ -151,7 +151,7 @@ export default function App() {
     if (!entry || entry.paid) return;
     const member = members.find(m => m.id === memberId);
     if (!member) return;
-    const emi = calcEMI(member.loanAmount);
+    const emi = Math.min(Number(member.emi)||0, member.balance>0?member.balance:0);
     const extra = customAmount && customAmount > (entry.totalDue||0) ? customAmount - (entry.totalDue||0) : 0;
     const newBalance = isForeclosure ? 0 : (member.balance > 0 ? Math.max(0, member.balance - emi - extra) : 0);
     await supabase.from('entries').update({ paid: true, paid_at: new Date().toISOString(), balance_after: newBalance, custom_amount: customAmount||0 }).eq('id', entry.db_id);
@@ -168,7 +168,7 @@ export default function App() {
     if (!entry || !entry.paid) return;
     const member = members.find(m => m.id === memberId);
     if (!member) return;
-    const restoredBalance = entry.balanceBefore !== undefined ? entry.balanceBefore : member.balance + calcEMI(member.loanAmount);
+    const restoredBalance = entry.balanceBefore !== undefined ? entry.balanceBefore : member.balance + (Number(member.emi)||0);
     await supabase.from('entries').update({ paid: false, paid_at: null }).eq('id', entry.db_id);
     await supabase.from('members').update({ balance: restoredBalance }).eq('id', memberId);
     setMembers(prev => prev.map(m => m.id === memberId ? {...m, balance: restoredBalance} : m));
@@ -190,7 +190,7 @@ export default function App() {
   const handleSaveMember = useCallback(async (member) => {
     if (member.id && member.id.includes('-')) {
       await supabase.from('members').update({ name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).eq('id', member.id);
-      const principal = calcEMI(member.loanAmount||0);
+      const principal = Math.min(Number(member.emi)||0, (member.balance||0)>0?(member.balance||0):0);
       const interest = calcInterest(member.balance||0);
       const updatedMonths = { ...months };
       for (const mk of Object.keys(updatedMonths)) {
@@ -206,7 +206,7 @@ export default function App() {
       const { data } = await supabase.from('members').insert({ group_id: selectedGroup.id, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).select().single();
       if (data) {
         const newMember = { ...member, id: data.id };
-        const principal = calcEMI(member.loanAmount||0);
+        const principal = Math.min(Number(member.emi)||0, (member.balance||0)>0?(member.balance||0):0);
         const interest = calcInterest(member.balance||0);
         const updatedMonths = { ...months };
         for (const mk of Object.keys(updatedMonths)) {

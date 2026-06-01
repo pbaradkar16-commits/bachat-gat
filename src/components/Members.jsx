@@ -36,15 +36,15 @@ function LoanHistoryModal({ member, months, onClose }) {
 }
 function MemberModal({ member, onSave, onClose }) {
   const isNew = !member.id;
-  const [form, setForm] = useState({ name: member.name||"", phone: member.phone||"", loanAmount: member.loanAmount||0, balance: member.balance||0 });
+  const [form, setForm] = useState({ name: member.name||"", phone: member.phone||"", loanAmount: member.loanAmount||0, balance: member.balance||0, emi: member.emi||0 });
   function set(k,v) { setForm(f=>({...f,[k]:v})); }
   function handleSave() {
     if (!form.name.trim()) { toast("नाव भरा","error"); return; }
     const loanAmount = Number(form.loanAmount)||0;
     const balance = Number(form.balance)||0;
-    onSave({...member, id:member.id||genId(), name:form.name.trim(), phone:form.phone.trim(), loanAmount, balance:Math.min(balance,loanAmount), createdAt:member.createdAt||Date.now()});
+    onSave({...member, id:member.id||genId(), name:form.name.trim(), phone:form.phone.trim(), loanAmount, balance:Math.min(balance,loanAmount), emi:Number(form.emi)||0, createdAt:member.createdAt||Date.now()});
   }
-  const emi=calcEMI(Number(form.loanAmount)||0);
+  const emi=Number(form.emi)||0;
   const interest=calcInterest(Number(form.balance)||0);
   const totalDue=SAVING_AMOUNT+emi+interest;
   return (
@@ -57,6 +57,7 @@ function MemberModal({ member, onSave, onClose }) {
           <div><label className="marathi">मोबाइल नंबर</label><input className="input" type="tel" value={form.phone} onChange={e=>set("phone",e.target.value)} placeholder="10 अंकी नंबर"/></div>
           <div><label className="marathi">मूळ कर्ज रक्कम (₹)</label><input className="input" type="number" value={form.loanAmount} onChange={e=>set("loanAmount",e.target.value)} placeholder="0" min="0"/></div>
           <div><label className="marathi">उर्वरित कर्ज शिल्लक (₹)</label><input className="input" type="number" value={form.balance} onChange={e=>set("balance",e.target.value)} placeholder="0" min="0"/></div>
+          <div><label className="marathi">मासिक हप्ता / EMI (₹)</label><input className="input" type="number" value={form.emi} onChange={e=>set("emi",e.target.value)} placeholder="0" min="0"/></div>
           {(Number(form.loanAmount)>0||Number(form.balance)>0)&&(
             <div style={{background:"var(--green-light)",borderRadius:12,padding:"12px 14px"}}>
               <div className="marathi text-sm font-bold text-green mb-2">मासिक देणे (अंदाज)</div>
