@@ -245,7 +245,7 @@ export default function App() {
   return (
     <div style={{ maxWidth:600, margin:"0 auto", minHeight:"100vh", background:"var(--bg)", position:"relative" }}>
       <ToastContainer />
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} onLock={() => { setUnlocked(false); sessionStorage.removeItem("sssb_unlocked"); }} group={selectedGroup} />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} onLock={() => { setSelectedGroup(null); setUnlocked(false); sessionStorage.removeItem("sssb_unlocked"); }} group={selectedGroup} />
       <main>
         {activeTab==="dashboard" && <Dashboard group={selectedGroup} members={members} months={months} currentMonth={currentMonth} setActiveTab={setActiveTab}/>}
         {activeTab==="monthly" && <MonthlyView members={members} months={months} currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} onMarkPaid={handleMarkPaid} onUndoPaid={handleUndoPaid} onCreateNextMonth={handleCreateNextMonth} group={selectedGroup}/>}
