@@ -42,7 +42,7 @@ function MemberModal({ member, onSave, onClose }) {
     if (!form.name.trim()) { toast("नाव भरा","error"); return; }
     const loanAmount = Number(form.loanAmount)||0;
     const balance = Number(form.balance)||0;
-    onSave({...member, id:member.id||genId(), name:form.name.trim(), phone:form.phone.trim(), loanAmount, balance:Math.min(balance,loanAmount), emi:Number(form.emi)||0, createdAt:member.createdAt||Date.now()});
+    onSave({...member, id:member.id||genId(), name:form.name.trim(), phone:form.phone.trim(), loanAmount:loanAmount||balance, balance, emi:Number(form.emi)||0, createdAt:member.createdAt||Date.now()});
   }
   const emi=Number(form.emi)||0;
   const interest=calcInterest(Number(form.balance)||0);
@@ -128,7 +128,7 @@ export default function Members({ members, months, onSave, onDelete }) {
                     <div className="marathi text-xs text-muted">मासिक देणे</div>
                   </div>
                 </div>
-                {member.loanAmount>0&&(
+                {(member.loanAmount>0||member.balance>0)&&(
                   <div style={{marginTop:10}}>
                     <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                       <span className="marathi text-xs text-muted">कर्ज परतफेड</span>
@@ -143,7 +143,7 @@ export default function Members({ members, months, onSave, onDelete }) {
                     </div>
                   </div>
                 )}
-                {member.loanAmount===0&&<div style={{marginTop:8}}><span className="badge badge-green"><span className="marathi">फक्त बचत सदस्य</span></span></div>}
+                {(!(member.balance>0)&&!(member.emi>0))&&<div style={{marginTop:8}}><span className="badge badge-green"><span className="marathi">फक्त बचत सदस्य</span></span></div>}
               </div>
               {isExpanded&&(
                 <div style={{borderTop:"1px solid var(--border)",padding:"12px 16px",display:"flex",gap:8,flexWrap:"wrap"}}>
