@@ -135,6 +135,23 @@ export default function App() {
           const newMonth = await createMonthInDB(m, cm, selectedGroup.id, mo);
           if (newMonth) mo = { ...mo, [cm]: newMonth };
         }
+        // Backfill: ensure every current member has an entry in the current month
+        const curMonth = mo[cm];
+        if (curMonth) {
+          const missing = m.filter(mem => !curMonth.entries[mem.id]);
+          if (missing.length > 0) {
+            const toInsert = missing.map(mem => {
+              const principal = Math.min(Number(mem.emi)||0, mem.balance>0?mem.balance:0);
+              const interest = calcInterest(mem.balance);
+              return { month_id: curMonth.db_id, member_id: mem.id, saving: SAVING_AMOUNT, principal, interest, total_due: SAVING_AMOUNT+principal+interest, paid: false, balance_before: mem.balance, balance_after: mem.balance>0?Math.max(0,mem.balance-principal):0 };
+            });
+            const { data: ins } = await supabase.from('entries').insert(toInsert).select();
+            for (const e of ins || []) {
+              curMonth.entries[e.member_id] = { memberId: e.member_id, db_id: e.id, saving: Number(e.saving)||1000, principal: Number(e.principal)||0, interest: Number(e.interest)||0, totalDue: Number(e.total_due)||0, customAmount: 0, paid: false, paidAt: null, balanceBefore: Number(e.balance_before)||0, balanceAfter: Number(e.balance_after)||0 };
+            }
+            mo = { ...mo, [cm]: { ...curMonth } };
+          }
+        }
         setMonths(mo);
       } catch(e) { console.error('init error:', e); }
       setLoading(false);
