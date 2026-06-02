@@ -104,7 +104,7 @@ export default function Members({ members, months, onSave, onDelete }) {
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {filtered.map((member,idx)=>{
-          const emi=calcEMI(member.loanAmount);
+          const emi=Number(member.emi)||0;
           const interest=calcInterest(member.balance);
           const totalDue=SAVING_AMOUNT+emi+interest;
           const loanPct=member.loanAmount>0?((member.loanAmount-member.balance)/member.loanAmount)*100:0;
