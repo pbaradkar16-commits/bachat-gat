@@ -64,7 +64,7 @@ function PinScreen({ onSuccess }) {
 async function loadMembersFromDB(groupId) {
   const { data, error } = await supabase.from('members').select('*').eq('group_id', groupId).order('created_at', { ascending: true });
   if (error) { console.error('loadMembers error:', error); return []; }
-  return (data || []).map(m => ({ id: m.id, name: m.name, phone: m.phone||"", loanAmount: Number(m.loan_amount)||0, balance: Number(m.balance)||0 }));
+  return (data || []).map(m => ({ id: m.id, name: m.name, phone: m.phone||"", loanAmount: Number(m.loan_amount)||0, balance: Number(m.balance)||0, emi: Number(m.emi)||0 }));
 }
 
 async function loadMonthsFromDB(members, groupId) {
@@ -206,7 +206,7 @@ export default function App() {
 
   const handleSaveMember = useCallback(async (member) => {
     if (member.id && member.id.includes('-')) {
-      await supabase.from('members').update({ name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).eq('id', member.id);
+      await supabase.from('members').update({ name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0, emi: member.emi||0 }).eq('id', member.id);
       const principal = Math.min(Number(member.emi)||0, (member.balance||0)>0?(member.balance||0):0);
       const interest = calcInterest(member.balance||0);
       const updatedMonths = { ...months };
@@ -220,7 +220,7 @@ export default function App() {
       setMonths(updatedMonths);
       setMembers(prev => prev.map(m => m.id === member.id ? member : m));
     } else {
-      const { data } = await supabase.from('members').insert({ group_id: selectedGroup.id, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0 }).select().single();
+      const { data } = await supabase.from('members').insert({ group_id: selectedGroup.id, name: member.name, phone: member.phone||"", loan_amount: member.loanAmount||0, balance: member.balance||0, emi: member.emi||0 }).select().single();
       if (data) {
         const newMember = { ...member, id: data.id };
         const principal = Math.min(Number(member.emi)||0, (member.balance||0)>0?(member.balance||0):0);
