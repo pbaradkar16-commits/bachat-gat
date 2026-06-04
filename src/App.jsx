@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import LicenseScreen from "./components/LicenseScreen.jsx";
 import { supabase } from "./supabase.js";
 import GroupSelect from "./components/GroupSelect.jsx";
@@ -20,39 +20,39 @@ function PinScreen({ onSuccess }) {
   const savedPin = localStorage.getItem("sssb_pin");
 
   useEffect(() => { if (!savedPin) setMode("setup"); }, []);
-  function handleLogin() { if (pin === savedPin) { onSuccess(); } else { setError("चुकीचा PIN!"); setPin(""); } }
-  function handleSetup() { if (newPin.length !== 4) { setError("4 अंकी PIN भरा"); return; } if (newPin !== confirm) { setError("PIN जुळत नाही!"); return; } localStorage.setItem("sssb_pin", newPin); onSuccess(); }
+  function handleLogin() { if (pin === savedPin) { onSuccess(); } else { setError("à¤šà¥à¤•à¥€à¤šà¤¾ PIN!"); setPin(""); } }
+  function handleSetup() { if (newPin.length !== 4) { setError("4 à¤…à¤‚à¤•à¥€ PIN à¤­à¤°à¤¾"); return; } if (newPin !== confirm) { setError("PIN à¤œà¥à¤³à¤¤ à¤¨à¤¾à¤¹à¥€!"); return; } localStorage.setItem("sssb_pin", newPin); onSuccess(); }
   function addDigit(d) { if (pin.length < 4) setPin(p => p + d); }
   function delDigit() { setPin(p => p.slice(0,-1)); }
   return (
     <div style={{ minHeight:"100vh", background:"linear-gradient(135deg, #E8650A, #A03A06)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20 }}>
-      <div style={{ fontSize:60, marginBottom:16 }}>🪔</div>
-      <div className="marathi" style={{ color:"#fff", fontSize:20, fontWeight:700, marginBottom:4, textAlign:"center" }}>श्री शीतला देवी पुरुष बचत गट बारड</div>
-      <div className="marathi" style={{ color:"rgba(255,255,255,0.8)", fontSize:13, marginBottom:32, textAlign:"center" }}>तालुका मुदखेड · जि. नांदेड</div>
+      <div style={{ fontSize:60, marginBottom:16 }}>ðŸª”</div>
+      <div className="marathi" style={{ color:"#fff", fontSize:20, fontWeight:700, marginBottom:4, textAlign:"center" }}>à¤¶à¥à¤°à¥€ à¤¶à¥€à¤¤à¤²à¤¾ à¤¦à¥‡à¤µà¥€ à¤ªà¥à¤°à¥à¤· à¤¬à¤šà¤¤ à¤—à¤Ÿ à¤¬à¤¾à¤°à¤¡</div>
+      <div className="marathi" style={{ color:"rgba(255,255,255,0.8)", fontSize:13, marginBottom:32, textAlign:"center" }}>à¤¤à¤¾à¤²à¥à¤•à¤¾ à¤®à¥à¤¦à¤–à¥‡à¤¡ Â· à¤œà¤¿. à¤¨à¤¾à¤‚à¤¦à¥‡à¤¡</div>
       <div style={{ background:"#fff", borderRadius:20, padding:28, width:"100%", maxWidth:340, boxShadow:"0 8px 32px rgba(0,0,0,0.2)" }}>
         {mode === "check" ? (
           <>
-            <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:20 }}>🔐 PIN टाका</div>
+            <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:20 }}>ðŸ” PIN à¤Ÿà¤¾à¤•à¤¾</div>
             <div style={{ display:"flex", justifyContent:"center", gap:12, marginBottom:24 }}>
               {[0,1,2,3].map(i => <div key={i} style={{ width:16, height:16, borderRadius:"50%", background:pin.length>i?"var(--saffron)":"#F0EDE8", border:"2px solid var(--saffron)", transition:"all 0.15s" }}/>)}
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:16 }}>
-              {[1,2,3,4,5,6,7,8,9,"",0,"⌫"].map((d,i) => (
-                <button key={i} onClick={() => d==="⌫" ? delDigit() : d!=="" ? addDigit(String(d)) : null} style={{ padding:"16px 0", fontSize:d==="⌫"?20:22, fontWeight:700, background:d===""?"transparent":"#F4F1EC", border:"none", borderRadius:12, cursor:d===""?"default":"pointer", color:"var(--text)" }}>{d}</button>
+              {[1,2,3,4,5,6,7,8,9,"",0,"âŒ«"].map((d,i) => (
+                <button key={i} onClick={() => d==="âŒ«" ? delDigit() : d!=="" ? addDigit(String(d)) : null} style={{ padding:"16px 0", fontSize:d==="âŒ«"?20:22, fontWeight:700, background:d===""?"transparent":"#F4F1EC", border:"none", borderRadius:12, cursor:d===""?"default":"pointer", color:"var(--text)" }}>{d}</button>
               ))}
             </div>
             {error && <div className="marathi text-center" style={{ color:"var(--red)", fontSize:13, marginBottom:12 }}>{error}</div>}
-            <button className="btn btn-saffron btn-full" onClick={handleLogin} disabled={pin.length!==4} style={{ opacity:pin.length===4?1:0.5 }}><span className="marathi">प्रवेश करा</span></button>
-            <div className="marathi" style={{ textAlign:"center", marginTop:20, color:"var(--text3)", fontSize:11 }}>निर्मिती: पवन भिमेवार अँड असोसिएट्स, नांदेड</div>
+            <button className="btn btn-saffron btn-full" onClick={handleLogin} disabled={pin.length!==4} style={{ opacity:pin.length===4?1:0.5 }}><span className="marathi">à¤ªà¥à¤°à¤µà¥‡à¤¶ à¤•à¤°à¤¾</span></button>
+            <div className="marathi" style={{ textAlign:"center", marginTop:20, color:"var(--text3)", fontSize:11 }}>à¤¨à¤¿à¤°à¥à¤®à¤¿à¤¤à¥€: à¤ªà¤µà¤¨ à¤­à¤¿à¤®à¥‡à¤µà¤¾à¤° à¤…à¤à¤¡ à¤…à¤¸à¥‹à¤¸à¤¿à¤à¤Ÿà¥à¤¸, à¤¨à¤¾à¤‚à¤¦à¥‡à¤¡</div>
           </>
         ) : (
           <>
-            <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:20 }}>🔑 नवीन PIN सेट करा</div>
+            <div className="marathi font-bold text-center" style={{ fontSize:18, marginBottom:20 }}>ðŸ”‘ à¤¨à¤µà¥€à¤¨ PIN à¤¸à¥‡à¤Ÿ à¤•à¤°à¤¾</div>
             <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-              <div><label className="marathi">4 अंकी PIN</label><input className="input" type="password" maxLength={4} value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,""))} placeholder="••••" style={{ textAlign:"center", fontSize:24, letterSpacing:12 }}/></div>
-              <div><label className="marathi">PIN परत टाका</label><input className="input" type="password" maxLength={4} value={confirm} onChange={e=>setConfirm(e.target.value.replace(/\D/g,""))} placeholder="••••" style={{ textAlign:"center", fontSize:24, letterSpacing:12 }}/></div>
+              <div><label className="marathi">4 à¤…à¤‚à¤•à¥€ PIN</label><input className="input" type="password" maxLength={4} value={newPin} onChange={e=>setNewPin(e.target.value.replace(/\D/g,""))} placeholder="â€¢â€¢â€¢â€¢" style={{ textAlign:"center", fontSize:24, letterSpacing:12 }}/></div>
+              <div><label className="marathi">PIN à¤ªà¤°à¤¤ à¤Ÿà¤¾à¤•à¤¾</label><input className="input" type="password" maxLength={4} value={confirm} onChange={e=>setConfirm(e.target.value.replace(/\D/g,""))} placeholder="â€¢â€¢â€¢â€¢" style={{ textAlign:"center", fontSize:24, letterSpacing:12 }}/></div>
               {error && <div className="marathi" style={{ color:"var(--red)", fontSize:13 }}>{error}</div>}
-              <button className="btn btn-saffron btn-full" onClick={handleSetup}><span className="marathi">PIN जतन करा</span></button>
+              <button className="btn btn-saffron btn-full" onClick={handleSetup}><span className="marathi">PIN à¤œà¤¤à¤¨ à¤•à¤°à¤¾</span></button>
             </div>
           </>
         )}
@@ -76,7 +76,16 @@ async function loadMonthsFromDB(members, groupId) {
     const { data: entriesData } = await supabase.from('entries').select('*').eq('month_id', m.id);
     const entries = {};
     for (const e of entriesData || []) {
-      entries[e.member_id] = { memberId: e.member_id, db_id: e.id, saving: Number(e.saving)||1000, principal: Number(e.principal)||0, interest: Number(e.interest)||0, totalDue: Number(e.total_due)||0, customAmount: Number(e.custom_amount)||0, paid: e.paid||false, paidAt: e.paid_at, balanceBefore: Number(e.balance_before)||0, balanceAfter: Number(e.balance_after)||0 };
+      const mem = members.find(mm => mm.id === e.member_id);
+      const isPaid = e.paid || false;
+      let principal = Number(e.principal)||0, interest = Number(e.interest)||0, balBefore = Number(e.balance_before)||0, balAfter = Number(e.balance_after)||0;
+      if (!isPaid && mem) {
+        balBefore = Number(mem.balance)||0;
+        principal = Math.min(Number(mem.emi)||0, balBefore>0?balBefore:0);
+        interest = calcInterest(balBefore);
+        balAfter = balBefore>0 ? Math.max(0, balBefore - principal) : 0;
+      }
+      entries[e.member_id] = { memberId: e.member_id, db_id: e.id, saving: Number(e.saving)||1000, principal, interest, totalDue: SAVING_AMOUNT+principal+interest, customAmount: Number(e.custom_amount)||0, paid: isPaid, paidAt: e.paid_at, balanceBefore: balBefore, balanceAfter: balAfter };
     }
     months[m.month_key] = { key: m.month_key, db_id: m.id, entries, bankBalance: Number(m.bank_balance)||0 };
   }
@@ -175,7 +184,7 @@ export default function App() {
     await supabase.from('members').update({ balance: newBalance }).eq('id', memberId);
     setMembers(prev => prev.map(m => m.id === memberId ? {...m, balance: newBalance} : m));
     setMonths(prev => ({ ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]: { ...entry, paid: true, paidAt: new Date().toISOString(), customAmount: customAmount||0, balanceAfter: newBalance } } } }));
-    toast("रक्कम यशस्वीरित्या नोंद झाली ✓", "success");
+    toast("à¤°à¤•à¥à¤•à¤® à¤¯à¤¶à¤¸à¥à¤µà¥€à¤°à¤¿à¤¤à¥à¤¯à¤¾ à¤¨à¥‹à¤‚à¤¦ à¤à¤¾à¤²à¥€ âœ“", "success");
   }, [months, members]);
 
   const handleUndoPaid = useCallback(async (monthKey, memberId) => {
@@ -190,7 +199,7 @@ export default function App() {
     await supabase.from('members').update({ balance: restoredBalance }).eq('id', memberId);
     setMembers(prev => prev.map(m => m.id === memberId ? {...m, balance: restoredBalance} : m));
     setMonths(prev => ({ ...prev, [monthKey]: { ...monthRecord, entries: { ...monthRecord.entries, [memberId]: { ...entry, paid: false, paidAt: null } } } }));
-    toast("रक्कम रद्द केली", "info");
+    toast("à¤°à¤•à¥à¤•à¤® à¤°à¤¦à¥à¤¦ à¤•à¥‡à¤²à¥€", "info");
   }, [months, members]);
 
   const handleCreateNextMonth = useCallback(async (forMonthKey) => {
@@ -200,7 +209,7 @@ export default function App() {
     if (newMonth) {
       setMonths(prev => ({ ...prev, [targetKey]: newMonth }));
       setCurrentMonth(targetKey);
-      toast(`${monthLabel(targetKey)} महिना तयार झाला`, "success");
+      toast(`${monthLabel(targetKey)} à¤®à¤¹à¤¿à¤¨à¤¾ à¤¤à¤¯à¤¾à¤° à¤à¤¾à¤²à¤¾`, "success");
     }
   }, [currentMonth, months, members]);
 
@@ -238,14 +247,14 @@ export default function App() {
         setMonths(updatedMonths);
       }
     }
-    toast("माहिती जतन झाली ✓", "success");
+    toast("à¤®à¤¾à¤¹à¤¿à¤¤à¥€ à¤œà¤¤à¤¨ à¤à¤¾à¤²à¥€ âœ“", "success");
   }, [months]);
 
   const handleDeleteMember = useCallback(async (memberId) => {
     await supabase.from('entries').delete().eq('member_id', memberId);
     await supabase.from('members').delete().eq('id', memberId);
     setMembers(prev => prev.filter(m => m.id !== memberId));
-    toast("सदस्य काढला", "info");
+    toast("à¤¸à¤¦à¤¸à¥à¤¯ à¤•à¤¾à¤¢à¤²à¤¾", "info");
   }, []);
 
   if (!licensed) return <LicenseScreen onSuccess={() => setLicensed(true)} />;
@@ -254,8 +263,8 @@ export default function App() {
 
   if (loading) return (
     <div style={{ minHeight:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)" }}>
-      <div style={{ fontSize:50, marginBottom:16 }}>🪔</div>
-      <div className="marathi" style={{ fontSize:16, color:"var(--text2)" }}>डेटा लोड होत आहे...</div>
+      <div style={{ fontSize:50, marginBottom:16 }}>ðŸª”</div>
+      <div className="marathi" style={{ fontSize:16, color:"var(--text2)" }}>à¤¡à¥‡à¤Ÿà¤¾ à¤²à¥‹à¤¡ à¤¹à¥‹à¤¤ à¤†à¤¹à¥‡...</div>
     </div>
   );
 
@@ -273,3 +282,5 @@ export default function App() {
     </div>
   );
 }
+
+
